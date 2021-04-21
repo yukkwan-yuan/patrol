@@ -15,11 +15,11 @@ find_package(catkin REQUIRED  COMPONENTS
   move_base_msgs
   std_msgs
   tf
+  moveit_ros_planning_interface
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -147,6 +147,11 @@ target_link_libraries(Navigation_Speed_Controller
 
 add_executable(patrol_node src/patrol.cpp)
 target_link_libraries(patrol_node 
+  ${catkin_LIBRARIES}
+)
+
+add_executable(warehouse_action src/warehouse_action.cpp)
+target_link_libraries(warehouse_action 
   ${catkin_LIBRARIES}
 )
 
