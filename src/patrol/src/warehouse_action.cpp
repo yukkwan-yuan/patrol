@@ -10,6 +10,11 @@
 #include <geometry_msgs/Pose.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 
+// Custom msg & srv
+#include <detection_msgs/Detection2DTrig.h>
+#include <detection_msgs/Det3D.h>
+#include <detection_msgs/Det3DArray.h>
+
 using namespace std;
 
 class warehouse_action
@@ -30,9 +35,11 @@ private:
     const vector<double> position5 = {-1.591, 0.076, 2.699, -2.781, 0.002, 0.000};
 public:
     warehouse_action(ros::NodeHandle nh);
+    void det_callback(detection_msgs::Det3DArray msg);
     void Position_Manager();
 
     ros::Publisher gripper_pub;
+    ros::Subscriber det_sub;
 };
 
 warehouse_action::warehouse_action(ros::NodeHandle nh)
@@ -40,7 +47,13 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     ros::AsyncSpinner spinner(1); 
     spinner.start();
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
+    det_sub = nh.subscribe("/scan_person_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
     Position_Manager();
+}
+
+void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
+{
+    
 }
 
 void warehouse_action::Position_Manager()

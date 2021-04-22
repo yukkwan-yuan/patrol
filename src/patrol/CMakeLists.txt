@@ -16,6 +16,7 @@ find_package(catkin REQUIRED  COMPONENTS
   std_msgs
   tf
   moveit_ros_planning_interface
+  detection_msgs
 )
 
 ## System dependencies are found with CMake's conventions
