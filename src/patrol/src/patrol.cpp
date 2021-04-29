@@ -4,6 +4,9 @@
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
+#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Twist.h>
 
 using namespace std;
 
@@ -18,11 +21,27 @@ public:
     void Target_two();
     void Target_home();
     void Setting_patrol_path();
+    void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
+
+    ros::Subscriber odom_sub;
 };
 
 PatrolNode::PatrolNode(ros::NodeHandle nh)
 {
-    Setting_patrol_path();
+    odom_sub = nh.subscribe("/odom_combined", 1, &PatrolNode::odom_callback, this);
+    // Setting_patrol_path();
+}
+
+void PatrolNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
+{
+    cout<<"Position"<<endl;
+    cout<<"X: "<<msg->pose.pose.position.x<<endl;
+    cout<<"Y: "<<msg->pose.pose.position.y<<endl;
+    cout<<"Z: "<<msg->pose.pose.position.z<<endl;
+    cout<<"Orientation"<<endl;
+    cout<<"rx: "<<msg->pose.pose.orientation.x<<endl;
+    cout<<"ry: "<<msg->pose.pose.orientation.y<<endl;
+    cout<<"rz: "<<msg->pose.pose.orientation.z<<endl;
 }
 
 void PatrolNode::Target_one()
