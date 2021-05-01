@@ -32,16 +32,30 @@ private:
     const vector<double> middle2_b = {3.344, -1.023, 2.259, -1.218, 1.285, 0.000};
     const vector<double> middler_p = {M_PI_2, -M_PI/3, M_PI_4*3, -1.309, -M_PI_2, 0.0};
     const vector<double> middlep_r = {0.000, 0.000, 0.000, 0.000, -M_PI_2, 0.0};
-    const vector<double> position1 = {-3.133, 0.180, 2.279, -2.450, 1.545, 0.000};
-    const vector<double> position2 = {-2.583, 0.183 ,2.462 ,-2.644, 1.019, 0.000};
-    const vector<double> position3 = {-2.190, 0.317, 2.316 ,-2.607, 0.590, 0.000};
-    const vector<double> position4 = {3.181, -0.120, 2.709, -2.586, M_PI_2, 0.000};
-    const vector<double> position5 = {-1.591, 0.076, 2.699, -2.781, 0.000, 0.000};
     const vector<double> position_s = {0, M_PI/3, -M_PI_4*3, 1.309, 0.000, 0.000}; //M_PI_4*3
-    const vector<double> scan_3 = {-0.305, -0.485, 1.473, -1.953, 0.286, 0.000};
-    const vector<double> scan_2 = {-0.870, 0.014, 2.161, -2.185, 0.888, 0.000};
-    const vector<double> scan_1 = {-1.564, 0.014, 2.261, -2.227, 1.550, 0.000};
-    float x_tmp = 0, y_tmp = 0, z_tmp = 0;
+
+    const vector<double> joint_sf_scan1 = {-1.564, 0.014, 2.261, -2.227, 1.550, 0.000};
+    const vector<double> joint_sf_scan2 = {-0.870, 0.014, 2.161, -2.185, 0.888, 0.000};
+    const vector<double> joint_sf_scan3 = {-0.305, -0.485, 1.473, -1.953, 0.286, 0.000};
+
+    const vector<double> joint_wh_scan1 = {-0.305, 0.485, 1.635, -1.953, 0.293, 0.160};
+    const vector<double> joint_wh_scan2 = {-0.772, -0.048, 2.320, -2.200, 0.758, 0.056};
+    const vector<double> joint_wh_scan3 = {-1.564, 0.014, 2.261, -2.227, 1.549, 0.003};
+    const vector<double> joint_wh_scan4 = {-2.176, 0.384, 1.793, -2.118, 2.154, -0.032};
+
+
+    const vector<double> joint_place1 = {-3.133, 0.180, 2.279, -2.450, 1.545, 0.000};
+    const vector<double> joint_place1_mid = {-3.133, -0.282, 2.255, -2.234, 1.547, 0.002};
+    const vector<double> joint_place2 = {-2.583, 0.183, 2.462, -2.644, 1.019, 0.000};
+    const vector<double> joint_place2_mid = {-2.822, -0.355, 2.231, -2.045, 1.473, 0.016};
+    const vector<double> joint_place3 = {-0.020, 0.269, -1.979, -1.416, 1.551, 3.130};
+    const vector<double> joint_place3_mid = {-0.028, 0.410, -1.616, -1.813, 1.544, 3.041};
+    const vector<double> joint_place4 = {3.181, -0.120,2.709, -2.586, 1.454, 0.034};
+    const vector<double> joint_place4_mid = {3.344, -1.023, 2.259, -1.218, 1.285, 0.028};
+    const vector<double> joint_place5 = {0.012, 0.647, -2.194, -1.579, 1.552, 3.040};
+    const vector<double> joint_place5_mid = {0.002, 0.755, -1.787, -2.089, 1.533, 3.035};
+
+    float *x_tmp, *y_tmp, *z_tmp;
     int count = 0;
     detection_msgs::Det3DArray target_bias;
 public:
@@ -57,6 +71,11 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
 {  
     ros::AsyncSpinner spinner(1); 
     spinner.start();
+
+    x_tmp = new float[10] ();
+    y_tmp = new float[10] ();
+    z_tmp = new float[10] ();
+
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
     // det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
     Position_Manager();
@@ -64,21 +83,21 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
 
 void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
 {
-    if(count <= 10)
-    {
-        for(int i=0; i<msg.dets_list.size(); i++)
-        {
-            target_bias.dets_list[i].class_name = msg.dets_list[i].class_name;
-            x_tmp += msg.dets_list[i].y;
-            y_tmp += msg.dets_list[i].x;
-            z_tmp += msg.dets_list[i].z;
-        }
-        count++;
-    }
-    else
-    {
+    // if(count <= 10)
+    // {
+    //     for(int i=0; i<msg.dets_list.size(); i++)
+    //     {
+    //         target_bias.dets_list[i].class_name = msg.dets_list[i].class_name;
+    //         x_tmp += msg.dets_list[i].y;
+    //         y_tmp += msg.dets_list[i].x;
+    //         z_tmp += msg.dets_list[i].z;
+    //     }
+    //     count++;
+    // }
+    // else
+    // {
 
-    }
+    // }
 }
 
 void warehouse_action::Position_Manager()
@@ -90,13 +109,8 @@ void warehouse_action::Position_Manager()
     current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
     move_group.setStartState(*move_group.getCurrentState());
     
-    ROS_INFO("GO TO TARGET");
     geometry_msgs::Pose target_pose1;
     target_pose1 = move_group.getCurrentPose().pose;
-    // target_pose1.orientation.x = 0.707;
-    // target_pose1.orientation.y = 0.000;
-    // target_pose1.orientation.z = 0.000;
-    // target_pose1.orientation.w = 0.707;
     // target_pose1.position.x = 0.280;  //(-)camera right
     // target_pose1.position.y = -0.200; //(-)camera forward
     // target_pose1.position.z = 0.800;  //(+)camera upward
@@ -111,16 +125,6 @@ void warehouse_action::Position_Manager()
     // move_group.setPoseTarget(target_pose1);
     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
     // move_group.move();
-    // cout<<"Position"<<endl;
-    // cout<<"X: "<<target_pose1.position.x<<endl;
-    // cout<<"Y: "<<target_pose1.position.y<<endl;
-    // cout<<"Z: "<<target_pose1.position.z<<endl;
-    // cout<<"Rotation"<<endl;
-    // cout<<"rx: "<<target_pose1.orientation.x<<endl;
-    // cout<<"ry: "<<target_pose1.orientation.y<<endl;
-    // cout<<"rz: "<<target_pose1.orientation.z<<endl;
-    // cout<<"rw: "<<target_pose1.orientation.w<<endl;
-    // last_target_number = 'g';
 
     while(1)
     {
@@ -154,16 +158,6 @@ void warehouse_action::Position_Manager()
                 move_group.setJointValueTarget(joint_group_positions);
                 move_group.move();
             }
-            // else if(last_target_number == 's')
-            // {
-            //     joint_group_positions = middlep_r;
-            //     move_group.setJointValueTarget(joint_group_positions);
-            //     move_group.move();
-
-            //     joint_group_positions = home_p;
-            //     move_group.setJointValueTarget(joint_group_positions);
-            //     move_group.move();
-            // }
             else
             {
                 joint_group_positions = home_p;
@@ -176,164 +170,276 @@ void warehouse_action::Position_Manager()
         }
         if(target_number == '1')
         {
-            ROS_INFO("GO FIRST POINT");
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
             grip.data = true;
             gripper_pub.publish(grip);
             sleep(1);
 
-            if(last_target_number == 'h')
-            {
-                joint_group_positions = middle1_a;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-            }
-            if(last_target_number == 'g')
-            {
-                // target_pose1.position.y += 0.230;
-                // move_group.setPoseTarget(target_pose1);
-                // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-                // move_group.move();
+            ROS_INFO("GO MIDDLE POINT");
 
-                joint_group_positions = position_s;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-
-                joint_group_positions = middlep_r;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();               
-            }
-
-            ROS_INFO("MIDDLE POINT");
-
-            joint_group_positions = middle1_a;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-
-            joint_group_positions = middle1_b;
+            joint_group_positions = joint_place1_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            joint_group_positions = position1;
+            ROS_INFO("GO PLACE 1");
+            joint_group_positions = joint_place1;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
-
-            last_target_number = target_number;
-
-            ROS_INFO("DONE");
+            
             grip.data = false;
             gripper_pub.publish(grip);
+
+            ROS_INFO("GO MIDDLE POINT");
+            joint_group_positions = joint_place1_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place1_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place1_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("DONE");
+
+            last_target_number = target_number;
         }
         if(target_number == '2')
         {
-            ROS_INFO("GO SECOND POINT");
-
-            joint_group_positions = middle1_a;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            ROS_INFO("MIDDLE POINT");
+            grip.data = true;
+            gripper_pub.publish(grip);
+            sleep(1);
 
-            joint_group_positions = middle1_b;
+            ROS_INFO("GO MIDDLE POINT");
+
+            joint_group_positions = joint_place2_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            joint_group_positions = position2;
+            ROS_INFO("GO PLACE 2");
+            joint_group_positions = joint_place2;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            
+            grip.data = false;
+            gripper_pub.publish(grip);
+
+            ROS_INFO("GO MIDDLE POINT");
+            joint_group_positions = joint_place2_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place2_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place2_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            last_target_number = target_number;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
 
             ROS_INFO("DONE");
+
+            last_target_number = target_number;
         }
         if(target_number == '3')
         {
-            ROS_INFO("GO THIRD POINT");
-
-            joint_group_positions = middle1_a;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            ROS_INFO("MIDDLE POINT");
+            grip.data = true;
+            gripper_pub.publish(grip);
+            sleep(1);
 
-            joint_group_positions = middle1_b;
+            ROS_INFO("GO MIDDLE POINT");
+
+            joint_group_positions = joint_place3_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            joint_group_positions = position3;
+            ROS_INFO("GO PLACE 3");
+            joint_group_positions = joint_place3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            
+            grip.data = false;
+            gripper_pub.publish(grip);
+
+            ROS_INFO("GO MIDDLE POINT");
+            joint_group_positions = joint_place3_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place3_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place3_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            last_target_number = target_number;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
 
             ROS_INFO("DONE");
+
+            last_target_number = target_number;
         }
         if(target_number == '4')
         {
-            ROS_INFO("GO FORTH POINT");
-
-            joint_group_positions = middle2_a;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            ROS_INFO("MIDDLE POINT");
+            grip.data = true;
+            gripper_pub.publish(grip);
+            sleep(1);
 
-            joint_group_positions = middle2_b;
+            ROS_INFO("GO MIDDLE POINT");
+
+            joint_group_positions = joint_place4_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            joint_group_positions = position4;
+            ROS_INFO("GO PLACE 1");
+            joint_group_positions = joint_place4;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            
+            grip.data = false;
+            gripper_pub.publish(grip);
+
+            ROS_INFO("GO MIDDLE POINT");
+            joint_group_positions = joint_place4_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place4_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place4_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            last_target_number = target_number;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
 
             ROS_INFO("DONE");
+
+            last_target_number = target_number;
         }
         if(target_number == '5')
         {
-            ROS_INFO("GO FIFTH POINT");
-
-            joint_group_positions = middle1_a;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            ROS_INFO("MIDDLE POINT");
+            grip.data = true;
+            gripper_pub.publish(grip);
+            sleep(1);
 
-            joint_group_positions = middle1_b;
+            ROS_INFO("GO MIDDLE POINT");
+
+            joint_group_positions = joint_place5_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            joint_group_positions = position5;
+            ROS_INFO("GO PLACE 1");
+            joint_group_positions = joint_place5;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            
+            grip.data = false;
+            gripper_pub.publish(grip);
+
+            ROS_INFO("GO MIDDLE POINT");
+            joint_group_positions = joint_place5_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place5_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            joint_group_positions = joint_place5_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            last_target_number = target_number;
+            ROS_INFO("GO SCAN 3");
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
 
             ROS_INFO("DONE");
+
+            last_target_number = target_number;
         }
         if(target_number == 's')
         {
             ROS_INFO("GO SCANNING POINT 1");
             
-            // joint_group_positions = scan_1;
-            // move_group.setJointValueTarget(joint_group_positions);
-            // move_group.move();
-
-            ROS_INFO("GO SCANNING POINT 2");
-
-            joint_group_positions = scan_2;
+            joint_group_positions = joint_sf_scan1;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            // ROS_INFO("GO SCANNING POINT 3");
+            ROS_INFO("GO SCANNING POINT 2");
 
-            // joint_group_positions = scan_3;
-            // move_group.setJointValueTarget(joint_group_positions);
-            // move_group.move();
+            joint_group_positions = joint_sf_scan2;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO SCANNING POINT 3");
+
+            joint_group_positions = joint_sf_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
 
             last_target_number = target_number;
 
             ROS_INFO("DONE");
+        }
+        if(target_number == 'w')
+        {
+            ROS_INFO("GO SCANNING POINT 1");
+            
+            joint_group_positions = joint_wh_scan1;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO SCANNING POINT 2");
+
+            joint_group_positions = joint_wh_scan2;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO SCANNING POINT 3");
+
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            
+            ROS_INFO("DONE");
+
+            last_target_number = target_number;
         }
         if(target_number == 'q')
         {
