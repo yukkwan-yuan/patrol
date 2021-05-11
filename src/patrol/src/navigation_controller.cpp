@@ -92,7 +92,7 @@ void NavigationController::max_vel_callback(const std_msgs::Float64::ConstPtr& m
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "Navigation_Speed_Controller");
+    ros::init(argc, argv, "navigation_speed_controller");
     ros::NodeHandle nh;
     NavigationController node(nh);
     ros::spin();

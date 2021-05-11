@@ -142,8 +142,8 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/patrol_node.cpp)
 
-add_executable(Navigation_Speed_Controller src/navigation_controller.cpp)
-target_link_libraries(Navigation_Speed_Controller 
+add_executable(navigation_speed_controller src/navigation_controller.cpp)
+target_link_libraries(navigation_speed_controller 
   ${catkin_LIBRARIES}
 )
 
@@ -154,6 +154,11 @@ target_link_libraries(patrol_node
 
 add_executable(warehouse_action src/warehouse_action.cpp)
 target_link_libraries(warehouse_action 
+  ${catkin_LIBRARIES}
+)
+
+add_executable(shelf_action src/shelf_action.cpp)
+target_link_libraries(shelf_action 
   ${catkin_LIBRARIES}
 )
 

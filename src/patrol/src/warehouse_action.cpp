@@ -35,15 +35,9 @@ private:
     const vector<double> middlep_r = {0.000, 0.000, 0.000, 0.000, -M_PI_2, 0.0};
     const vector<double> position_s = {0, M_PI/3, -M_PI_4*3, 1.309, 0.000, 0.000}; //M_PI_4*3
 
-    const vector<double> joint_sf_scan1 = {-1.564, 0.014, 2.261, -2.227, 1.550, 0.000};
-    const vector<double> joint_sf_scan2 = {-0.870, 0.014, 2.161, -2.185, 0.888, 0.000};
-    const vector<double> joint_sf_scan3 = {-0.305, -0.485, 1.473, -1.953, 0.286, 0.000};
-
     const vector<double> joint_wh_scan3 = {-0.305, 0.485, 1.635, -1.953, 0.293, 0.160};
     const vector<double> joint_wh_scan2 = {-0.772, -0.048, 2.320, -2.200, 0.758, 0.056};
     const vector<double> joint_wh_scan1 = {-1.564, 0.014, 2.261, -2.227, 1.549, 0.003};
-    // const vector<double> joint_wh_scan4 = {-2.176, 0.384, 1.793, -2.118, 2.154, -0.032};
-
 
     const vector<double> joint_place1 = {-3.133, 0.180, 2.279, -2.450, 1.545, 0.000};
     const vector<double> joint_place1_mid = {-3.133, -0.282, 2.255, -2.234, 1.547, 0.002};
@@ -154,30 +148,45 @@ void warehouse_action::Position_Manager()
     while(1)
     {
         target_number = getchar();
-        // if(target_number == 's')
-        // {
-        //     ROS_INFO("GO SCANNING POINT 1");
-            
-        //     joint_group_positions = joint_sf_scan1;
-        //     move_group.setJointValueTarget(joint_group_positions);
-        //     move_group.move();
 
-        //     ROS_INFO("GO SCANNING POINT 2");
+        if(target_number == 'h')
+        {
+            ROS_INFO("GO HOME");
 
-        //     joint_group_positions = joint_sf_scan2;
-        //     move_group.setJointValueTarget(joint_group_positions);
-        //     move_group.move();
+            if(last_target_number == '4')
+            {
+                joint_group_positions = middle2_b;
+                move_group.setJointValueTarget(joint_group_positions);
+                move_group.move();
 
-        //     ROS_INFO("GO SCANNING POINT 3");
+                joint_group_positions = middle2_a;
+                move_group.setJointValueTarget(joint_group_positions);
+                move_group.move();
 
-        //     joint_group_positions = joint_sf_scan3;
-        //     move_group.setJointValueTarget(joint_group_positions);
-        //     move_group.move();
+                joint_group_positions = home_p;
+                move_group.setJointValueTarget(joint_group_positions);
+                move_group.move();
+            }
+            else if(last_target_number == '1' || last_target_number == '2' || last_target_number == '3' || last_target_number == '5')
+            {
+                joint_group_positions = middle1_b;
+                move_group.setJointValueTarget(joint_group_positions);
+                move_group.move();
 
-        //     last_target_number = target_number;
+                joint_group_positions = home_p;
+                move_group.setJointValueTarget(joint_group_positions);
+                move_group.move();
+            }
+            else
+            {
+                joint_group_positions = home_p;
+                move_group.setJointValueTarget(joint_group_positions);
+                move_group.move();
+            }
+            last_target_number = target_number;
 
-        //     ROS_INFO("DONE");
-        // }
+            ROS_INFO("DONE");
+        }
         if(target_number == 'w')
         {
             ROS_INFO("GO SCANNING POINT 1");
@@ -185,7 +194,7 @@ void warehouse_action::Position_Manager()
             joint_group_positions = joint_wh_scan1;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
-            sleep(2);
+            sleep(1);
             reach = true;
             current_pose = move_group.getCurrentPose().pose;
             sleep(1);
@@ -222,44 +231,6 @@ void warehouse_action::Position_Manager()
 
                 target_number = '1';
 
-                if(target_number == 'h')
-                {
-                    ROS_INFO("GO HOME");
-
-                    if(last_target_number == '4')
-                    {
-                        joint_group_positions = middle2_b;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = middle2_a;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    else if(last_target_number == '1' || last_target_number == '2' || last_target_number == '3' || last_target_number == '5')
-                    {
-                        joint_group_positions = middle1_b;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    else
-                    {
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    last_target_number = target_number;
-
-                    ROS_INFO("DONE");
-                }
                 if(target_number == '1')
                 {
                     grip.data = true;
@@ -469,7 +440,7 @@ void warehouse_action::Position_Manager()
             joint_group_positions = joint_wh_scan2;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
-            sleep(2);
+            sleep(1);
             reach = true;
             current_pose = move_group.getCurrentPose().pose;
             sleep(1);
@@ -506,44 +477,6 @@ void warehouse_action::Position_Manager()
 
                 target_number = '2';
 
-                if(target_number == 'h')
-                {
-                    ROS_INFO("GO HOME");
-
-                    if(last_target_number == '4')
-                    {
-                        joint_group_positions = middle2_b;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = middle2_a;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    else if(last_target_number == '1' || last_target_number == '2' || last_target_number == '3' || last_target_number == '5')
-                    {
-                        joint_group_positions = middle1_b;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    else
-                    {
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    last_target_number = target_number;
-
-                    ROS_INFO("DONE");
-                }
                 if(target_number == '1')
                 {
                     grip.data = true;
@@ -753,7 +686,7 @@ void warehouse_action::Position_Manager()
             joint_group_positions = joint_wh_scan3;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
-            sleep(2);
+            sleep(1);
             reach = true;
             current_pose = move_group.getCurrentPose().pose;
             sleep(1);
@@ -790,44 +723,6 @@ void warehouse_action::Position_Manager()
 
                 target_number = '3';
 
-                if(target_number == 'h')
-                {
-                    ROS_INFO("GO HOME");
-
-                    if(last_target_number == '4')
-                    {
-                        joint_group_positions = middle2_b;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = middle2_a;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    else if(last_target_number == '1' || last_target_number == '2' || last_target_number == '3' || last_target_number == '5')
-                    {
-                        joint_group_positions = middle1_b;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    else
-                    {
-                        joint_group_positions = home_p;
-                        move_group.setJointValueTarget(joint_group_positions);
-                        move_group.move();
-                    }
-                    last_target_number = target_number;
-
-                    ROS_INFO("DONE");
-                }
                 if(target_number == '1')
                 {
                     grip.data = true;
@@ -1040,7 +935,6 @@ void warehouse_action::Position_Manager()
 
             last_target_number = target_number;    
         }
-        
         if(target_number == 'q')
         {
             ROS_INFO("QUIT");
