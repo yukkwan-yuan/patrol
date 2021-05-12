@@ -25,9 +25,11 @@ private:
     char target_number;
     const string PLANNING_GROUP = "tm_arm";
     const vector<double> home_p = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.0};
-    const vector<double> joint_sf_scan1 = {-1.564, 0.014, 2.261, -2.227, 1.550, 0.000};
+    const vector<double> joint_sf_scan1 = {-1.564, -0.531, 2.223, -1.681, 1.621, 0.000};
     const vector<double> joint_sf_scan2 = {-0.870, 0.014, 2.161, -2.185, 0.888, 0.000};
     
+    float *x_tmp, *y_tmp, *z_tmp;
+    int count = 0;
     detection_msgs::Det3DArray target_bias;
     detection_msgs::Det3D bias;
     bool reach = false;
@@ -45,7 +47,11 @@ shelf_action::shelf_action(ros::NodeHandle nh)
     ros::AsyncSpinner spinner(1); 
     spinner.start();
 
-    // det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
+    x_tmp = new float[10] ();
+    y_tmp = new float[10] ();
+    z_tmp = new float[10] ();
+
+    det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &shelf_action::det_callback, this);
     Position_Manager();
 }
 
@@ -53,7 +59,42 @@ void shelf_action::det_callback(detection_msgs::Det3DArray msg)
 {
     if(reach)
     {
+        target_bias.dets_list.clear();
+
+        while(count < 10)
+        {
+            for(int i=0; i<msg.dets_list.size(); i++)
+            {
+                x_tmp[i] += msg.dets_list[i].x;
+                y_tmp[i] += msg.dets_list[i].y;
+                z_tmp[i] += msg.dets_list[i].z;
+            }
+            count++;
+        }
+
+        count = 0;
+
+        for(int i=0; i<msg.dets_list.size(); i++)
+        {
+            bias.class_name = msg.dets_list[i].class_name;
+            bias.class_id = msg.dets_list[i].class_id;
+            bias.x = x_tmp[i]/10;
+            bias.y = y_tmp[i]/10;
+            bias.z = z_tmp[i]/10;
+            x_tmp[i] = 0;
+            y_tmp[i] = 0;
+            z_tmp[i] = 0;
+            target_bias.dets_list.push_back(bias);
+        }
+
+        cout<<"There are "<<target_bias.dets_list.size()<<" bottles"<<endl;
+        for(int i=0; i<target_bias.dets_list.size(); i++)
+        {
+            printf("No.%d: ", target_bias.dets_list[i].class_id);
+            cout<<target_bias.dets_list[i].class_name<<endl;
+        }
         
+        reach = false;
     }
 }
 
