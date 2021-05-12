@@ -38,6 +38,7 @@ public:
     void det_callback(detection_msgs::Det3DArray msg);
     void Position_Manager();
 
+    ros::Publisher mis_pub;
     ros::Subscriber det_sub;
     geometry_msgs::Pose current_pose;
 };
@@ -51,6 +52,7 @@ shelf_action::shelf_action(ros::NodeHandle nh)
     y_tmp = new float[10] ();
     z_tmp = new float[10] ();
 
+    mis_pub = nh.advertise<detection_msgs::Det3DArray>("/missing_bottle", 1);
     det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &shelf_action::det_callback, this);
     Position_Manager();
 }
@@ -96,6 +98,8 @@ void shelf_action::det_callback(detection_msgs::Det3DArray msg)
         
         reach = false;
     }
+
+    mis_pub.publish(target_bias);
 }
 
 void shelf_action::Position_Manager()

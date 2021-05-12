@@ -75,12 +75,12 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     z_tmp = new float[10] ();
 
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
-    det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
+    det_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::det_callback, this);
     Position_Manager();
 }
 
 void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
-{
+{   cout<<msg.dets_list.size()<<endl;
     if(msg.dets_list.size() != 0 && reach)
         find = true;
     else
