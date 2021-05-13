@@ -189,8 +189,8 @@ void warehouse_action::Position_Manager()
                 cout<<tf2.getOrigin().getZ()<<endl;
 
                 current_pose.position.x += tf2.getOrigin().getX();
-                current_pose.position.y -= tf2.getOrigin().getZ()-0.1;
-                current_pose.position.z += tf2.getOrigin().getY()-0.08;
+                current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
+                current_pose.position.z += tf2.getOrigin().getY()-0.1;
 
                 move_group.setPoseTarget(current_pose);
                 success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
@@ -425,8 +425,8 @@ void warehouse_action::Position_Manager()
                 cout<<tf2.getOrigin().getZ()<<endl;
 
                 current_pose.position.x += tf2.getOrigin().getX();
-                current_pose.position.y -= tf2.getOrigin().getZ()-0.1;
-                current_pose.position.z += tf2.getOrigin().getY()-0.08;
+                current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
+                current_pose.position.z += tf2.getOrigin().getY()-0.1;
 
                 move_group.setPoseTarget(current_pose);
                 success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
@@ -661,8 +661,8 @@ void warehouse_action::Position_Manager()
                 cout<<tf2.getOrigin().getZ()<<endl;
 
                 current_pose.position.x += tf2.getOrigin().getX();
-                current_pose.position.y -= tf2.getOrigin().getZ()-0.1;
-                current_pose.position.z += tf2.getOrigin().getY()-0.08;
+                current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
+                current_pose.position.z += tf2.getOrigin().getY()-0.1;
 
                 move_group.setPoseTarget(current_pose);
                 success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);

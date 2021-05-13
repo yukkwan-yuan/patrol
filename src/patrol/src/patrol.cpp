@@ -29,19 +29,19 @@ public:
 PatrolNode::PatrolNode(ros::NodeHandle nh)
 {
     odom_sub = nh.subscribe("/odom_combined", 1, &PatrolNode::odom_callback, this);
-    // Setting_patrol_path();
+    Setting_patrol_path();
 }
 
 void PatrolNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-    cout<<"Position"<<endl;
-    cout<<"X: "<<msg->pose.pose.position.x<<endl;
-    cout<<"Y: "<<msg->pose.pose.position.y<<endl;
-    cout<<"Z: "<<msg->pose.pose.position.z<<endl;
-    cout<<"Orientation"<<endl;
-    cout<<"rx: "<<msg->pose.pose.orientation.x<<endl;
-    cout<<"ry: "<<msg->pose.pose.orientation.y<<endl;
-    cout<<"rz: "<<msg->pose.pose.orientation.z<<endl;
+    // cout<<"Position"<<endl;
+    // cout<<"X: "<<msg->pose.pose.position.x<<endl;
+    // cout<<"Y: "<<msg->pose.pose.position.y<<endl;
+    // cout<<"Z: "<<msg->pose.pose.position.z<<endl;
+    // cout<<"Orientation"<<endl;
+    // cout<<"rx: "<<msg->pose.pose.orientation.x<<endl;
+    // cout<<"ry: "<<msg->pose.pose.orientation.y<<endl;
+    // cout<<"rz: "<<msg->pose.pose.orientation.z<<endl;
 }
 
 void PatrolNode::Target_one()
@@ -61,13 +61,13 @@ void PatrolNode::Target_one()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 3.379;
-    goal.target_pose.pose.position.y = -4.896;
+    goal.target_pose.pose.position.x = 3.228;
+    goal.target_pose.pose.position.y = -4.406;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = -0.476;
-    goal.target_pose.pose.orientation.w = 0.880;
+    goal.target_pose.pose.orientation.z = -0.484;
+    goal.target_pose.pose.orientation.w = 0.875;
 
     ROS_INFO("Sending goal");
     ac.sendGoal(goal);
@@ -97,13 +97,13 @@ void PatrolNode::Target_two()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 5.500;
-    goal.target_pose.pose.position.y = -4.300;
+    goal.target_pose.pose.position.x = 3.106;
+    goal.target_pose.pose.position.y = 1.744;
     goal.target_pose.pose.position.z = 0.000;
-    goal.target_pose.pose.orientation.x = 0.0;
-    goal.target_pose.pose.orientation.y = 0.0;
-    goal.target_pose.pose.orientation.z = 0.0;
-    goal.target_pose.pose.orientation.w = 1.0;
+    goal.target_pose.pose.orientation.x = 0.000;
+    goal.target_pose.pose.orientation.y = 0.000;
+    goal.target_pose.pose.orientation.z = 0.971;
+    goal.target_pose.pose.orientation.w = -0.238;
 
     ROS_INFO("Sending goal");
     ac.sendGoal(goal);
@@ -154,30 +154,27 @@ void PatrolNode::Target_home()
 
 void PatrolNode::Setting_patrol_path()
 {
-    int cur_state = 0;
-
     while(true)
     {
-        int c = getchar();
+        char c = getchar();
 
-        if(cur_state == 0 && c == 10)
+        if(c == '1')
         {
             Target_one();
-            cur_state++;
-        }
-        else if(cur_state == 1 && c == 10)
-        {
-            Target_two();
-            cur_state++;
         }
 
-        if(c == 110)
+        if(c == '2')
+        {
+            Target_two();
+        }
+
+        if(c == 'q')
         {
             cout<<"End of patrol"<<endl;
             break;
         }
 
-        if(c == 104)
+        if(c == 'h')
         {
             Target_home();
             cout<<"Mars go back to home"<<endl;
