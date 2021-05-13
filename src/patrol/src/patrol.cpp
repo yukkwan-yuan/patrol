@@ -61,13 +61,13 @@ void PatrolNode::Target_one()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 4.000;
-    goal.target_pose.pose.position.y = -4.000;
+    goal.target_pose.pose.position.x = 3.379;
+    goal.target_pose.pose.position.y = -4.896;
     goal.target_pose.pose.position.z = 0.000;
-    goal.target_pose.pose.orientation.x = 0.0;
-    goal.target_pose.pose.orientation.y = 0.0;
-    goal.target_pose.pose.orientation.z = 0.0;
-    goal.target_pose.pose.orientation.w = 1.0;
+    goal.target_pose.pose.orientation.x = 0.000;
+    goal.target_pose.pose.orientation.y = 0.000;
+    goal.target_pose.pose.orientation.z = -0.476;
+    goal.target_pose.pose.orientation.w = 0.880;
 
     ROS_INFO("Sending goal");
     ac.sendGoal(goal);

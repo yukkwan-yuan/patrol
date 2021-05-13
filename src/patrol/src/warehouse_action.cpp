@@ -23,8 +23,8 @@ class warehouse_action
 {
 private:
     std_msgs::Bool grip;
-    char target_number, last_target_number = '0';
     const string PLANNING_GROUP = "tm_arm";
+    char command;
     const vector<double> home_p = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.0};
     const vector<double> home_r = {M_PI, M_PI/3, -M_PI_4*3, 1.309, -M_PI_2, 0.0};
     const vector<double> middle1_a = {-M_PI, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.000};
@@ -51,7 +51,7 @@ private:
     const vector<double> joint_place5_mid = {0.002, 0.755, -1.787, -2.089, 1.533, 3.035};
 
     float *x_tmp, *y_tmp, *z_tmp;
-    int count = 0, target_amount;
+    int count = 0, target_amount, target_number = 0;
     bool find = false, grab = false, collect = false, reach = false;
     detection_msgs::Det3DArray target_bias;
     detection_msgs::Det3D bias;
@@ -75,12 +75,13 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     z_tmp = new float[10] ();
 
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
-    det_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::det_callback, this);
+    // det_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::det_callback, this);
+    det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
     Position_Manager();
 }
 
 void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
-{   cout<<msg.dets_list.size()<<endl;
+{   //cout<<msg.dets_list.size()<<endl;
     if(msg.dets_list.size() != 0 && reach)
         find = true;
     else
@@ -147,47 +148,19 @@ void warehouse_action::Position_Manager()
 
     while(1)
     {
-        target_number = getchar();
+        command = getchar();
 
-        if(target_number == 'h')
+        if(command == 'h')
         {
             ROS_INFO("GO HOME");
 
-            if(last_target_number == '4')
-            {
-                joint_group_positions = middle2_b;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-
-                joint_group_positions = middle2_a;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-
-                joint_group_positions = home_p;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-            }
-            else if(last_target_number == '1' || last_target_number == '2' || last_target_number == '3' || last_target_number == '5')
-            {
-                joint_group_positions = middle1_b;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-
-                joint_group_positions = home_p;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-            }
-            else
-            {
-                joint_group_positions = home_p;
-                move_group.setJointValueTarget(joint_group_positions);
-                move_group.move();
-            }
-            last_target_number = target_number;
+            joint_group_positions = home_p;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
 
             ROS_INFO("DONE");
         }
-        if(target_number == 'w')
+        if(command == 'w')
         {
             ROS_INFO("GO SCANNING POINT 1");
         
@@ -229,9 +202,9 @@ void warehouse_action::Position_Manager()
                 success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                 move_group.move();
 
-                target_number = '1';
+                target_number++;
 
-                if(target_number == '1')
+                if(target_number == 1)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -268,10 +241,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '2')
+                if(target_number == 2)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -308,10 +279,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '3')
+                if(target_number == 3)
                 {   
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -348,10 +317,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '4')
+                if(target_number == 4)
                 {   
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -388,10 +355,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '5')
+                if(target_number == 5)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -428,8 +393,6 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
             }
             collect = false;
@@ -475,9 +438,9 @@ void warehouse_action::Position_Manager()
                 success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                 move_group.move();
 
-                target_number = '2';
+                target_number++;
 
-                if(target_number == '1')
+                if(target_number == 1)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -514,10 +477,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '2')
+                if(target_number == 2)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -554,10 +515,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '3')
+                if(target_number == 3)
                 {   
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -594,10 +553,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '4')
+                if(target_number == 4)
                 {   
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -634,10 +591,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '5')
+                if(target_number == 5)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -674,8 +629,6 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
             }
             collect = false;
@@ -721,9 +674,9 @@ void warehouse_action::Position_Manager()
                 success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                 move_group.move();
 
-                target_number = '3';
+                target_number++;
 
-                if(target_number == '1')
+                if(target_number == 1)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -760,10 +713,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '2')
+                if(target_number == 2)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -800,10 +751,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '3')
+                if(target_number == 3)
                 {   
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -840,10 +789,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '4')
+                if(target_number == 4)
                 {   
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -880,10 +827,8 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
-                if(target_number == '5')
+                if(target_number == 5)
                 {
                     grip.data = true;
                     gripper_pub.publish(grip);
@@ -920,22 +865,21 @@ void warehouse_action::Position_Manager()
                     move_group.move();
 
                     ROS_INFO("DONE");
-
-                    last_target_number = target_number;
                 }
             }
             collect = false;
             reach = false;
 
-            ROS_INFO("GO SCANNING POINT 1");
+            ROS_INFO("GO HOME");
 
-            joint_group_positions = joint_wh_scan1;
+            joint_group_positions = home_p;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
-
-            last_target_number = target_number;    
+   
+            ROS_INFO("DONE");
+            target_number = 0;
         }
-        if(target_number == 'q')
+        if(command == 'q')
         {
             ROS_INFO("QUIT");
             break;
