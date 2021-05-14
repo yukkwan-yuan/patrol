@@ -51,7 +51,7 @@ private:
     const vector<double> joint_place5_mid = {0.002, 0.755, -1.787, -2.089, 1.533, 3.035};
 
     float *x_tmp, *y_tmp, *z_tmp;
-    int count = 0, target_amount, target_number = 0;
+    int count = 0, target_amount = 0, target_number = 0;
     bool find = false, grab = false, collect = false, reach = false;
     detection_msgs::Det3DArray target_bias;
     detection_msgs::Det3D bias;
@@ -174,227 +174,232 @@ void warehouse_action::Position_Manager()
 
             ROS_INFO("DONE");
             cout<<target_amount<<endl;
-            for(int i=0; i<target_amount; i++)
+            if(target_amount > 0)
             {
-                current_pose = move_group.getCurrentPose().pose;
-                tf::TransformListener listener;
-                tf::StampedTransform tf2;
-                string tf_name2 = "/tm_target_pose";
-                listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
-                listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
-
-                cout<<"Relative Pose"<<endl;
-                cout<<tf2.getOrigin().getX()<<endl;
-                cout<<tf2.getOrigin().getY()<<endl;
-                cout<<tf2.getOrigin().getZ()<<endl;
-
-                current_pose.position.x += tf2.getOrigin().getX();
-                current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
-                current_pose.position.z += tf2.getOrigin().getY()-0.1;
-
-                move_group.setPoseTarget(current_pose);
-                success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-                move_group.move();
-
-                current_pose.position.y -= 0.1;
-
-                move_group.setPoseTarget(current_pose);
-                success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-                move_group.move();
-
-                target_number++;
-
-                if(target_number == 1)
+                for(int i=0; i<target_amount; i++)
                 {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1); 
+                    current_pose = move_group.getCurrentPose().pose;
+                    tf::TransformListener listener;
+                    tf::StampedTransform tf2;
+                    string tf_name2 = "/tm_target_pose";
+                    listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
+                    listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
 
-                    ROS_INFO("GO MIDDLE POINT");
+                    cout<<"Relative Pose"<<endl;
+                    cout<<tf2.getOrigin().getX()<<endl;
+                    cout<<tf2.getOrigin().getY()<<endl;
+                    cout<<tf2.getOrigin().getZ()<<endl;
 
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
+                    current_pose.position.x += tf2.getOrigin().getX();
+                    current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
+                    current_pose.position.z += tf2.getOrigin().getY()-0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
 
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place1;
-                    move_group.setJointValueTarget(joint_group_positions);
+                    current_pose.position.y -= 0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
+
+                    target_number++;
+
+                    if(target_number == 1)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1); 
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 1");
+                        joint_group_positions = joint_wh_scan1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 2)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);          
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 2");
+                        joint_group_positions = joint_place2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 1");
+                        joint_group_positions = joint_wh_scan1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 3)
+                    {   
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 3");
+                        joint_group_positions = joint_place3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 1");
+                        joint_group_positions = joint_wh_scan1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 4)
+                    {   
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
                     
-                    grip.data = false;
-                    gripper_pub.publish(grip);
+                        ROS_INFO("GO MIDDLE POINT");
 
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
 
-                    ROS_INFO("GO SCAN 1");
-                    joint_group_positions = joint_wh_scan1;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place4;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
 
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 2)
-                {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);          
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
 
-                    ROS_INFO("GO MIDDLE POINT");
+                        ROS_INFO("GO SCAN 1");
+                        joint_group_positions = joint_wh_scan1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
 
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 2");
-                    joint_group_positions = joint_place2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 5)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
                     
-                    grip.data = false;
-                    gripper_pub.publish(grip);
+                        ROS_INFO("GO MIDDLE POINT");
 
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
 
-                    ROS_INFO("GO SCAN 1");
-                    joint_group_positions = joint_wh_scan1;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place5;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
 
-                    ROS_INFO("DONE");
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 1");
+                        joint_group_positions = joint_wh_scan1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
                 }
-                if(target_number == 3)
-                {   
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 3");
-                    joint_group_positions = joint_place3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 1");
-                    joint_group_positions = joint_wh_scan1;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 4)
-                {   
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-                
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place4;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 1");
-                    joint_group_positions = joint_wh_scan1;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 5)
-                {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-                   
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place5;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 1");
-                    joint_group_positions = joint_wh_scan1;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
+                target_amount = 0;
             }
+            
             collect = false;
             reach = false;
 
@@ -410,235 +415,242 @@ void warehouse_action::Position_Manager()
 
             ROS_INFO("DONE");
             cout<<target_amount<<endl;
-            for(int i=0; i<target_amount; i++)
+
+            if(target_amount > 0)
             {
-                current_pose = move_group.getCurrentPose().pose;
-                tf::TransformListener listener;
-                tf::StampedTransform tf2;
-                string tf_name2 = "/tm_target_pose";
-                listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
-                listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
-
-                cout<<"Relative Pose"<<endl;
-                cout<<tf2.getOrigin().getX()<<endl;
-                cout<<tf2.getOrigin().getY()<<endl;
-                cout<<tf2.getOrigin().getZ()<<endl;
-
-                current_pose.position.x += tf2.getOrigin().getX();
-                current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
-                current_pose.position.z += tf2.getOrigin().getY()-0.1;
-
-                move_group.setPoseTarget(current_pose);
-                success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-                move_group.move();
-
-                current_pose.position.y -= 0.1;
-
-                move_group.setPoseTarget(current_pose);
-                success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-                move_group.move();
-
-                target_number++;
-
-                if(target_number == 1)
+                for(int i=0; i<target_amount; i++)
                 {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1); 
+                    current_pose = move_group.getCurrentPose().pose;
+                    tf::TransformListener listener;
+                    tf::StampedTransform tf2;
+                    string tf_name2 = "/tm_target_pose";
+                    listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
+                    listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
 
-                    ROS_INFO("GO MIDDLE POINT");
+                    cout<<"Relative Pose"<<endl;
+                    cout<<tf2.getOrigin().getX()<<endl;
+                    cout<<tf2.getOrigin().getY()<<endl;
+                    cout<<tf2.getOrigin().getZ()<<endl;
 
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
+                    current_pose.position.x += tf2.getOrigin().getX();
+                    current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
+                    current_pose.position.z += tf2.getOrigin().getY()-0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
 
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place1;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
+                    current_pose.position.y -= 0.1;
 
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
 
-                    ROS_INFO("GO SCAN 2");
-                    joint_group_positions = joint_wh_scan2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                    target_number++;
 
-                    ROS_INFO("DONE");
+                    if(target_number == 1)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1); 
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 2");
+                        joint_group_positions = joint_wh_scan2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 2)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);      
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 2");
+                        joint_group_positions = joint_place2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 2");
+                        joint_group_positions = joint_wh_scan2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 3)
+                    {   
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 3");
+                        joint_group_positions = joint_place3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 2");
+                        joint_group_positions = joint_wh_scan2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 4)
+                    {   
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place4;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 2");
+                        joint_group_positions = joint_wh_scan2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 5)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place5;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 2");
+                        joint_group_positions = joint_wh_scan2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
                 }
-                if(target_number == 2)
-                {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);      
-
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 2");
-                    joint_group_positions = joint_place2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 2");
-                    joint_group_positions = joint_wh_scan2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 3)
-                {   
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 3");
-                    joint_group_positions = joint_place3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 2");
-                    joint_group_positions = joint_wh_scan2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 4)
-                {   
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place4;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 2");
-                    joint_group_positions = joint_wh_scan2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 5)
-                {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place5;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 2");
-                    joint_group_positions = joint_wh_scan2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
+                target_amount = 0;
             }
+            
             collect = false;
             reach = false;
-
+            
             ROS_INFO("GO SCANNING POINT 3");
 
             joint_group_positions = joint_wh_scan3;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
+            
             sleep(1);
             reach = true;
             current_pose = move_group.getCurrentPose().pose;
@@ -646,227 +658,232 @@ void warehouse_action::Position_Manager()
 
             ROS_INFO("DONE");
             cout<<target_amount<<endl;
-            for(int i=0; i<target_amount; i++)
+            if(target_amount > 0)
             {
-                current_pose = move_group.getCurrentPose().pose;
-                tf::TransformListener listener;
-                tf::StampedTransform tf2;
-                string tf_name2 = "/tm_target_pose";
-                listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
-                listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
-
-                cout<<"Relative Pose"<<endl;
-                cout<<tf2.getOrigin().getX()<<endl;
-                cout<<tf2.getOrigin().getY()<<endl;
-                cout<<tf2.getOrigin().getZ()<<endl;
-
-                current_pose.position.x += tf2.getOrigin().getX();
-                current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
-                current_pose.position.z += tf2.getOrigin().getY()-0.1;
-
-                move_group.setPoseTarget(current_pose);
-                success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-                move_group.move();
-
-                current_pose.position.y -= 0.1;
-
-                move_group.setPoseTarget(current_pose);
-                success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-                move_group.move();
-
-                target_number++;
-
-                if(target_number == 1)
+                for(int i=0; i<target_amount; i++)
                 {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);           
+                    current_pose = move_group.getCurrentPose().pose;
+                    tf::TransformListener listener;
+                    tf::StampedTransform tf2;
+                    string tf_name2 = "/tm_target_pose";
+                    listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
+                    listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
 
-                    ROS_INFO("GO MIDDLE POINT");
+                    cout<<"Relative Pose"<<endl;
+                    cout<<tf2.getOrigin().getX()<<endl;
+                    cout<<tf2.getOrigin().getY()<<endl;
+                    cout<<tf2.getOrigin().getZ()<<endl;
 
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
+                    current_pose.position.x += tf2.getOrigin().getX();
+                    current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
+                    current_pose.position.z += tf2.getOrigin().getY()-0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
 
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place1;
-                    move_group.setJointValueTarget(joint_group_positions);
+                    current_pose.position.y -= 0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
+
+                    target_number++;
+
+                    if(target_number == 1)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);           
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place1;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place1_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 3");
+                        joint_group_positions = joint_wh_scan3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 2)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);          
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 2");
+                        joint_group_positions = joint_place2;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place2_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 3");
+                        joint_group_positions = joint_wh_scan3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 3)
+                    {   
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
+
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 3");
+                        joint_group_positions = joint_place3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place3_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 3");
+                        joint_group_positions = joint_wh_scan3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 4)
+                    {   
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
                     
-                    grip.data = false;
-                    gripper_pub.publish(grip);
+                        ROS_INFO("GO MIDDLE POINT");
 
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place1_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
 
-                    ROS_INFO("GO SCAN 3");
-                    joint_group_positions = joint_wh_scan3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place4;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
 
-                    ROS_INFO("DONE");
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place4_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 3");
+                        joint_group_positions = joint_wh_scan3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
+                    if(target_number == 5)
+                    {
+                        grip.data = true;
+                        gripper_pub.publish(grip);
+                        sleep(1);
+                        
+                        ROS_INFO("GO MIDDLE POINT");
+
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO PLACE 1");
+                        joint_group_positions = joint_place5;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        
+                        grip.data = false;
+                        gripper_pub.publish(grip);
+
+                        ROS_INFO("GO MIDDLE POINT");
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+                        joint_group_positions = joint_place5_mid;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("GO SCAN 3");
+                        joint_group_positions = joint_wh_scan3;
+                        move_group.setJointValueTarget(joint_group_positions);
+                        move_group.move();
+
+                        ROS_INFO("DONE");
+                    }
                 }
-                if(target_number == 2)
-                {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);          
-
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 2");
-                    joint_group_positions = joint_place2;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place2_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 3");
-                    joint_group_positions = joint_wh_scan3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 3)
-                {   
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 3");
-                    joint_group_positions = joint_place3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place3_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 3");
-                    joint_group_positions = joint_wh_scan3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 4)
-                {   
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-                
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place4;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place4_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 3");
-                    joint_group_positions = joint_wh_scan3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
-                if(target_number == 5)
-                {
-                    grip.data = true;
-                    gripper_pub.publish(grip);
-                    sleep(1);
-                    
-                    ROS_INFO("GO MIDDLE POINT");
-
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO PLACE 1");
-                    joint_group_positions = joint_place5;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    
-                    grip.data = false;
-                    gripper_pub.publish(grip);
-
-                    ROS_INFO("GO MIDDLE POINT");
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-                    joint_group_positions = joint_place5_mid;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("GO SCAN 3");
-                    joint_group_positions = joint_wh_scan3;
-                    move_group.setJointValueTarget(joint_group_positions);
-                    move_group.move();
-
-                    ROS_INFO("DONE");
-                }
+                target_amount = 0;
             }
+
             collect = false;
             reach = false;
 
