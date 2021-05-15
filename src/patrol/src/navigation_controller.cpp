@@ -74,7 +74,7 @@ void NavigationController::nav_cmd_vel_callback(const geometry_msgs::Twist::Cons
     new_cmd_vel.angular.z = twist->angular.z;
 
     ROS_INFO("Sending new cmd vel: %lf\n", sqrt(pow(new_cmd_vel.linear.x, 2) + pow(new_cmd_vel.linear.y, 2)));
-    // ROS_INFO("max_speed: %lf\n", last_max_speed);
+    
     cmd_vel_pub.publish(new_cmd_vel);
 }
 
@@ -87,7 +87,10 @@ void NavigationController::det_callback(const std_msgs::Int8::ConstPtr& msg)
 void NavigationController::max_vel_callback(const std_msgs::Float64::ConstPtr& msg)
 {
     // ROS_INFO("Setting Max Speed to %lf\n", msg->data);
-    max_speed = msg->data;
+    if(msg->data > 0.3)
+        max_speed = 0.4;
+    else
+        max_speed = msg->data;
 }
 
 int main(int argc, char **argv)

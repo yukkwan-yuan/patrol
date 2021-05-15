@@ -19,6 +19,10 @@ public:
     PatrolNode(ros::NodeHandle nh);
     void Target_one();
     void Target_two();
+    void Target_three();
+    void Target_four();
+    void Target_five();
+    void Target_six();
     void Target_home();
     void Setting_patrol_path();
     void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
@@ -61,13 +65,13 @@ void PatrolNode::Target_one()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 7.126;
-    goal.target_pose.pose.position.y = -1.219;
+    goal.target_pose.pose.position.x = 7.235;
+    goal.target_pose.pose.position.y = -1.425;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = 0.849;
-    goal.target_pose.pose.orientation.w = 0.528;
+    goal.target_pose.pose.orientation.z = 0.850;
+    goal.target_pose.pose.orientation.w = 0.526;
 
     ROS_INFO("Sending goal");
     ac.sendGoal(goal);
@@ -97,13 +101,157 @@ void PatrolNode::Target_two()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 3.106;
-    goal.target_pose.pose.position.y = 1.744;
+    goal.target_pose.pose.position.x = 3.942;
+    goal.target_pose.pose.position.y = 1.675;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = 0.971;
-    goal.target_pose.pose.orientation.w = -0.238;
+    goal.target_pose.pose.orientation.z = 0.984;
+    goal.target_pose.pose.orientation.w = -0.179;
+
+    ROS_INFO("Sending goal");
+    ac.sendGoal(goal);
+
+    ac.waitForResult();
+
+    if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+        ROS_INFO("Hooray, the base moved to the goal");
+    else
+        ROS_INFO("The base failed to move to the goal");
+}
+
+void PatrolNode::Target_three()
+{
+    //tell the action client that we want to spin a thread by default
+    MoveBaseClient ac("move_base", true);
+
+    //wait for the action server to come up
+    while(!ac.waitForServer(ros::Duration(5.0)))
+    {
+        ROS_INFO("Waiting for the move_base action server to come up");
+    }
+
+    move_base_msgs::MoveBaseGoal goal;
+
+    //we'll send a goal to the robot to move 1 meter forward
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+
+    goal.target_pose.pose.position.x = 1.878;
+    goal.target_pose.pose.position.y = 0.275;
+    goal.target_pose.pose.position.z = 0.000;
+    goal.target_pose.pose.orientation.x = 0.000;
+    goal.target_pose.pose.orientation.y = 0.000;
+    goal.target_pose.pose.orientation.z = -0.508;
+    goal.target_pose.pose.orientation.w = 0.861;
+
+    ROS_INFO("Sending goal");
+    ac.sendGoal(goal);
+
+    ac.waitForResult();
+
+    if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+        ROS_INFO("Hooray, the base moved to the goal");
+    else
+        ROS_INFO("The base failed to move to the goal");
+}
+
+void PatrolNode::Target_four()
+{
+    //tell the action client that we want to spin a thread by default
+    MoveBaseClient ac("move_base", true);
+
+    //wait for the action server to come up
+    while(!ac.waitForServer(ros::Duration(5.0)))
+    {
+        ROS_INFO("Waiting for the move_base action server to come up");
+    }
+
+    move_base_msgs::MoveBaseGoal goal;
+
+    //we'll send a goal to the robot to move 1 meter forward
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+
+    goal.target_pose.pose.position.x = 4.368;
+    goal.target_pose.pose.position.y = -4.045;
+    goal.target_pose.pose.position.z = 0.000;
+    goal.target_pose.pose.orientation.x = 0.000;
+    goal.target_pose.pose.orientation.y = 0.000;
+    goal.target_pose.pose.orientation.z = -0.523;
+    goal.target_pose.pose.orientation.w = 0.852;
+
+    ROS_INFO("Sending goal");
+    ac.sendGoal(goal);
+
+    ac.waitForResult();
+
+    if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+        ROS_INFO("Hooray, the base moved to the goal");
+    else
+        ROS_INFO("The base failed to move to the goal");
+}
+
+void PatrolNode::Target_five()
+{
+    //tell the action client that we want to spin a thread by default
+    MoveBaseClient ac("move_base", true);
+
+    //wait for the action server to come up
+    while(!ac.waitForServer(ros::Duration(5.0)))
+    {
+        ROS_INFO("Waiting for the move_base action server to come up");
+    }
+
+    move_base_msgs::MoveBaseGoal goal;
+
+    //we'll send a goal to the robot to move 1 meter forward
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+
+    goal.target_pose.pose.position.x = 7.470;
+    goal.target_pose.pose.position.y = -5.639;
+    goal.target_pose.pose.position.z = 0.000;
+    goal.target_pose.pose.orientation.x = 0.000;
+    goal.target_pose.pose.orientation.y = 0.000;
+    goal.target_pose.pose.orientation.z = 0.246;
+    goal.target_pose.pose.orientation.w = 0.969;
+
+    ROS_INFO("Sending goal");
+    ac.sendGoal(goal);
+
+    ac.waitForResult();
+
+    if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+        ROS_INFO("Hooray, the base moved to the goal");
+    else
+        ROS_INFO("The base failed to move to the goal");
+}
+
+void PatrolNode::Target_six()
+{
+    //tell the action client that we want to spin a thread by default
+    MoveBaseClient ac("move_base", true);
+
+    //wait for the action server to come up
+    while(!ac.waitForServer(ros::Duration(5.0)))
+    {
+        ROS_INFO("Waiting for the move_base action server to come up");
+    }
+
+    move_base_msgs::MoveBaseGoal goal;
+
+    //we'll send a goal to the robot to move 1 meter forward
+    goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.stamp = ros::Time::now();
+
+    goal.target_pose.pose.position.x = 8.215;
+    goal.target_pose.pose.position.y = -4.161;
+    goal.target_pose.pose.position.z = 0.000;
+    goal.target_pose.pose.orientation.x = 0.000;
+    goal.target_pose.pose.orientation.y = 0.000;
+    goal.target_pose.pose.orientation.z = 0.746;
+    goal.target_pose.pose.orientation.w = 0.666;
 
     ROS_INFO("Sending goal");
     ac.sendGoal(goal);
@@ -166,6 +314,26 @@ void PatrolNode::Setting_patrol_path()
         if(c == '2')
         {
             Target_two();
+        }
+
+        if(c == '3')
+        {
+            Target_three();
+        }
+
+        if(c == '4')
+        {
+            Target_four();
+        }
+
+        if(c == '5')
+        {
+            Target_five();
+        }
+
+        if(c == '6')
+        {
+            Target_six();
         }
 
         if(c == 'q')
