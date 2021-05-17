@@ -54,7 +54,7 @@ void PatrolNode::Target_one()
     MoveBaseClient ac("move_base", true);
 
     //wait for the action server to come up
-    while(!ac.waitForServer(ros::Duration(5.0)))
+    while(!ac.waitForServer(ros::Duration(3.0)))
     {
         ROS_INFO("Waiting for the move_base action server to come up");
     }
@@ -65,15 +65,15 @@ void PatrolNode::Target_one()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 7.235;
-    goal.target_pose.pose.position.y = -1.425;
+    goal.target_pose.pose.position.x = 7.288;
+    goal.target_pose.pose.position.y = -1.459;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
     goal.target_pose.pose.orientation.z = 0.850;
     goal.target_pose.pose.orientation.w = 0.526;
 
-    ROS_INFO("Sending goal");
+    ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
     ac.waitForResult();
@@ -81,7 +81,7 @@ void PatrolNode::Target_one()
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
     else
-        ROS_INFO("The base failed to move to the goal");
+        ROS_INFO("Sending Next Goal");
 }
 
 void PatrolNode::Target_two()
@@ -90,7 +90,7 @@ void PatrolNode::Target_two()
     MoveBaseClient ac("move_base", true);
 
     //wait for the action server to come up
-    while(!ac.waitForServer(ros::Duration(5.0)))
+    while(!ac.waitForServer(ros::Duration(3.0)))
     {
         ROS_INFO("Waiting for the move_base action server to come up");
     }
@@ -109,15 +109,15 @@ void PatrolNode::Target_two()
     goal.target_pose.pose.orientation.z = 0.984;
     goal.target_pose.pose.orientation.w = -0.179;
 
-    ROS_INFO("Sending goal");
+    ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult();
+    ac.waitForResult(ros::Duration(10.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
     else
-        ROS_INFO("The base failed to move to the goal");
+        ROS_INFO("Sending Next Goal");
 }
 
 void PatrolNode::Target_three()
@@ -126,7 +126,7 @@ void PatrolNode::Target_three()
     MoveBaseClient ac("move_base", true);
 
     //wait for the action server to come up
-    while(!ac.waitForServer(ros::Duration(5.0)))
+    while(!ac.waitForServer(ros::Duration(3.0)))
     {
         ROS_INFO("Waiting for the move_base action server to come up");
     }
@@ -145,15 +145,15 @@ void PatrolNode::Target_three()
     goal.target_pose.pose.orientation.z = -0.508;
     goal.target_pose.pose.orientation.w = 0.861;
 
-    ROS_INFO("Sending goal");
+    ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult();
+    ac.waitForResult(ros::Duration(5.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
     else
-        ROS_INFO("The base failed to move to the goal");
+        ROS_INFO("Sending Next Goal");
 }
 
 void PatrolNode::Target_four()
@@ -162,7 +162,7 @@ void PatrolNode::Target_four()
     MoveBaseClient ac("move_base", true);
 
     //wait for the action server to come up
-    while(!ac.waitForServer(ros::Duration(5.0)))
+    while(!ac.waitForServer(ros::Duration(3.0)))
     {
         ROS_INFO("Waiting for the move_base action server to come up");
     }
@@ -181,15 +181,15 @@ void PatrolNode::Target_four()
     goal.target_pose.pose.orientation.z = -0.523;
     goal.target_pose.pose.orientation.w = 0.852;
 
-    ROS_INFO("Sending goal");
+    ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult();
+    ac.waitForResult(ros::Duration(25.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
     else
-        ROS_INFO("The base failed to move to the goal");
+        ROS_INFO("Sending Next Goal");
 }
 
 void PatrolNode::Target_five()
@@ -198,7 +198,7 @@ void PatrolNode::Target_five()
     MoveBaseClient ac("move_base", true);
 
     //wait for the action server to come up
-    while(!ac.waitForServer(ros::Duration(5.0)))
+    while(!ac.waitForServer(ros::Duration(3.0)))
     {
         ROS_INFO("Waiting for the move_base action server to come up");
     }
@@ -217,15 +217,15 @@ void PatrolNode::Target_five()
     goal.target_pose.pose.orientation.z = 0.246;
     goal.target_pose.pose.orientation.w = 0.969;
 
-    ROS_INFO("Sending goal");
+    ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult();
+    ac.waitForResult(ros::Duration(10.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
     else
-        ROS_INFO("The base failed to move to the goal");
+        ROS_INFO("Sending Next Goal");
 }
 
 void PatrolNode::Target_six()
@@ -234,7 +234,7 @@ void PatrolNode::Target_six()
     MoveBaseClient ac("move_base", true);
 
     //wait for the action server to come up
-    while(!ac.waitForServer(ros::Duration(5.0)))
+    while(!ac.waitForServer(ros::Duration(3.0)))
     {
         ROS_INFO("Waiting for the move_base action server to come up");
     }
@@ -253,15 +253,15 @@ void PatrolNode::Target_six()
     goal.target_pose.pose.orientation.z = 0.746;
     goal.target_pose.pose.orientation.w = 0.666;
 
-    ROS_INFO("Sending goal");
+    ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult();
+    ac.waitForResult(ros::Duration(6.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
     else
-        ROS_INFO("The base failed to move to the goal");
+        ROS_INFO("Sending Next Goal");
 }
 
 void PatrolNode::Target_home()
@@ -334,6 +334,16 @@ void PatrolNode::Setting_patrol_path()
         if(c == '6')
         {
             Target_six();
+        }
+
+        if(c == 's')
+        {
+            Target_two();
+            Target_three();
+            Target_four();
+            Target_five();
+            Target_six();
+            Target_one();
         }
 
         if(c == 'q')
