@@ -24,20 +24,29 @@ public:
     void Target_five();
     void Target_six();
     void Target_home();
+    void Test();
     void Setting_patrol_path();
     void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
 
+    ros::Publisher vel_pub;
     ros::Subscriber odom_sub;
+    geometry_msgs::Twist cmd_twist;
+    nav_msgs::Odometry start_odom, cur_odom;\
+    bool reach = true;
 };
 
 PatrolNode::PatrolNode(ros::NodeHandle nh)
 {
+    ros::AsyncSpinner spinner(1); 
+    spinner.start();
+
+    vel_pub = nh.advertise<geometry_msgs::Twist>("/mob_plat/cmd_vel", 1);
     odom_sub = nh.subscribe("/odom_combined", 1, &PatrolNode::odom_callback, this);
     Setting_patrol_path();
 }
 
 void PatrolNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
-{
+{   
     // cout<<"Position"<<endl;
     // cout<<"X: "<<msg->pose.pose.position.x<<endl;
     // cout<<"Y: "<<msg->pose.pose.position.y<<endl;
@@ -46,6 +55,40 @@ void PatrolNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
     // cout<<"rx: "<<msg->pose.pose.orientation.x<<endl;
     // cout<<"ry: "<<msg->pose.pose.orientation.y<<endl;
     // cout<<"rz: "<<msg->pose.pose.orientation.z<<endl;
+
+    if(reach)
+    {
+        start_odom.pose.pose.position.x = msg->pose.pose.position.x;
+        start_odom.pose.pose.position.y = msg->pose.pose.position.y;
+        start_odom.pose.pose.position.z = msg->pose.pose.position.z;
+        start_odom.pose.pose.orientation.x = msg->pose.pose.orientation.x;
+        start_odom.pose.pose.orientation.y = msg->pose.pose.orientation.y;
+        start_odom.pose.pose.orientation.z = msg->pose.pose.orientation.z;
+        start_odom.pose.pose.orientation.w = msg->pose.pose.orientation.w;
+        start_odom.twist.twist.linear.x = msg->twist.twist.linear.x;
+        start_odom.twist.twist.linear.y = msg->twist.twist.linear.y;
+        start_odom.twist.twist.linear.z = msg->twist.twist.linear.z;
+        start_odom.twist.twist.angular.x = msg->twist.twist.angular.x;
+        start_odom.twist.twist.angular.y = msg->twist.twist.angular.y;
+        start_odom.twist.twist.angular.z = msg->twist.twist.angular.z;
+        reach = false;
+    }
+    else
+    {
+        cur_odom.pose.pose.position.x = msg->pose.pose.position.x;
+        cur_odom.pose.pose.position.y = msg->pose.pose.position.y;
+        cur_odom.pose.pose.position.z = msg->pose.pose.position.z;
+        cur_odom.pose.pose.orientation.x = msg->pose.pose.orientation.x;
+        cur_odom.pose.pose.orientation.y = msg->pose.pose.orientation.y;
+        cur_odom.pose.pose.orientation.z = msg->pose.pose.orientation.z;
+        cur_odom.pose.pose.orientation.w = msg->pose.pose.orientation.w;
+        cur_odom.twist.twist.linear.x = msg->twist.twist.linear.x;
+        cur_odom.twist.twist.linear.y = msg->twist.twist.linear.y;
+        cur_odom.twist.twist.linear.z = msg->twist.twist.linear.z;
+        cur_odom.twist.twist.angular.x = msg->twist.twist.angular.x;
+        cur_odom.twist.twist.angular.y = msg->twist.twist.angular.y;
+        cur_odom.twist.twist.angular.z = msg->twist.twist.angular.z;
+    }
 }
 
 void PatrolNode::Target_one()
@@ -73,13 +116,13 @@ void PatrolNode::Target_one()
     // goal.target_pose.pose.orientation.z = 0.850;
     // goal.target_pose.pose.orientation.w = 0.526;
 
-    goal.target_pose.pose.position.x = 7.416;
-    goal.target_pose.pose.position.y = -1.425;
+    goal.target_pose.pose.position.x = 7.272;
+    goal.target_pose.pose.position.y = -1.206;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = 0.869;
-    goal.target_pose.pose.orientation.w = 0.495;
+    goal.target_pose.pose.orientation.z = 0.900;
+    goal.target_pose.pose.orientation.w = 0.436;
 
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
@@ -217,18 +260,18 @@ void PatrolNode::Target_five()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 7.470;
-    goal.target_pose.pose.position.y = -5.639;
+    goal.target_pose.pose.position.x = 6.157;
+    goal.target_pose.pose.position.y = -6.063;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = 0.246;
-    goal.target_pose.pose.orientation.w = 0.969;
+    goal.target_pose.pose.orientation.z = 0.218;
+    goal.target_pose.pose.orientation.w = 0.976;
 
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult(ros::Duration(10.0));
+    ac.waitForResult(ros::Duration(8.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
@@ -308,9 +351,35 @@ void PatrolNode::Target_home()
         ROS_INFO("The base failed to move to the goal");
 }
 
+void PatrolNode::Test()
+{
+    cmd_twist.linear.x = 0.4;
+    cmd_twist.linear.y = -0.2;
+    cmd_twist.linear.z = 0.0;
+    cmd_twist.angular.x = 0.0;
+    cmd_twist.angular.y = 0.0;
+    cmd_twist.angular.z = 0.0;
+    reach = true;
+    sleep(0.5);
+
+    while(1)
+    {
+        vel_pub.publish(cmd_twist);
+        
+        if(cur_odom.pose.pose.position.x - start_odom.pose.pose.position.x > 3.0)
+        {
+            cmd_twist.linear.x = 0.0;
+            cmd_twist.linear.y = 0.0;
+            vel_pub.publish(cmd_twist);
+            break;
+        }
+    }
+    
+}
+
 void PatrolNode::Setting_patrol_path()
 {
-    while(true)
+    while(1)
     {
         char c = getchar();
 
@@ -352,6 +421,11 @@ void PatrolNode::Setting_patrol_path()
             Target_five();
             Target_six();
             Target_one();
+        }
+        
+        if(c == 't')
+        {
+            Test();
         }
 
         if(c == 'q')
