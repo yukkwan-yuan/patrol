@@ -71,7 +71,11 @@ void NavigationController::nav_cmd_vel_callback(const geometry_msgs::Twist::Cons
     new_cmd_vel.linear.z = twist->linear.z;
     new_cmd_vel.angular.x = twist->angular.x;
     new_cmd_vel.angular.y = twist->angular.y;
-    new_cmd_vel.angular.z = twist->angular.z;
+
+    if(twist->angular.z < 0.08 && twist->angular.z > -0.08)
+        new_cmd_vel.angular.z = 0;
+    else
+        new_cmd_vel.angular.z = twist->angular.z;
 
     ROS_INFO("Sending new cmd vel: %lf\n", sqrt(pow(new_cmd_vel.linear.x, 2) + pow(new_cmd_vel.linear.y, 2)));
     

@@ -65,13 +65,21 @@ void PatrolNode::Target_one()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 7.288;
-    goal.target_pose.pose.position.y = -1.459;
+    // goal.target_pose.pose.position.x = 7.288;
+    // goal.target_pose.pose.position.y = -1.459;
+    // goal.target_pose.pose.position.z = 0.000;
+    // goal.target_pose.pose.orientation.x = 0.000;
+    // goal.target_pose.pose.orientation.y = 0.000;
+    // goal.target_pose.pose.orientation.z = 0.850;
+    // goal.target_pose.pose.orientation.w = 0.526;
+
+    goal.target_pose.pose.position.x = 7.416;
+    goal.target_pose.pose.position.y = -1.425;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = 0.850;
-    goal.target_pose.pose.orientation.w = 0.526;
+    goal.target_pose.pose.orientation.z = 0.869;
+    goal.target_pose.pose.orientation.w = 0.495;
 
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
@@ -112,7 +120,7 @@ void PatrolNode::Target_two()
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult(ros::Duration(10.0));
+    ac.waitForResult(ros::Duration(12.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
@@ -148,7 +156,7 @@ void PatrolNode::Target_three()
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult(ros::Duration(5.0));
+    ac.waitForResult(ros::Duration(7.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
@@ -184,7 +192,7 @@ void PatrolNode::Target_four()
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult(ros::Duration(25.0));
+    ac.waitForResult(ros::Duration(30.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
