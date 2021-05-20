@@ -11,6 +11,10 @@
 #include <std_msgs/Int8.h>
 
 using namespace std;
+
+static const string COLOR_GREEN = "\e[0;32m";
+static const string COLOR_NC = "\e[0m";
+
 int first_t = 0;
 double last_max_speed;
 
@@ -37,6 +41,7 @@ NavigationController::NavigationController(ros::NodeHandle nh)
     cmd_vel_sub = nh.subscribe("/mobile/cmd_vel", 1, &NavigationController::nav_cmd_vel_callback, this);
     det_sub = nh.subscribe("/people/num", 1, &NavigationController::det_callback, this);
     max_speed_sub = nh.subscribe("/navigation_controller/max_speed", 1, &NavigationController::max_vel_callback, this);
+    cout << COLOR_GREEN << ros::this_node::getName() << " is ready." << COLOR_NC << endl;
 }
 
 void NavigationController::nav_cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& twist)
@@ -77,9 +82,8 @@ void NavigationController::nav_cmd_vel_callback(const geometry_msgs::Twist::Cons
     else
         new_cmd_vel.angular.z = twist->angular.z;
 
-    ROS_INFO("Sending new cmd vel: %lf\n", sqrt(pow(new_cmd_vel.linear.x, 2) + pow(new_cmd_vel.linear.y, 2)));
-    
     cmd_vel_pub.publish(new_cmd_vel);
+    // ROS_INFO("Sending new cmd vel: %lf\n", sqrt(pow(new_cmd_vel.linear.x, 2) + pow(new_cmd_vel.linear.y, 2)));
 }
 
 void NavigationController::det_callback(const std_msgs::Int8::ConstPtr& msg)

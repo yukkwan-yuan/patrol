@@ -7,6 +7,10 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+#include <tf/LinearMath/Matrix3x3.h>
+#include <tf/LinearMath/Vector3.h>
 
 using namespace std;
 
@@ -353,27 +357,38 @@ void PatrolNode::Target_home()
 
 void PatrolNode::Test()
 {
-    cmd_twist.linear.x = 0.4;
-    cmd_twist.linear.y = -0.2;
-    cmd_twist.linear.z = 0.0;
-    cmd_twist.angular.x = 0.0;
-    cmd_twist.angular.y = 0.0;
-    cmd_twist.angular.z = 0.0;
-    reach = true;
-    sleep(0.5);
+    tf::TransformListener listener;
+    tf::StampedTransform tf;
+    string tf_name = "/tag_369";
+    listener.waitForTransform("/base_link", tf_name, ros::Time(0), ros::Duration(4.0));
+    listener.lookupTransform("/base_link", tf_name, ros::Time(0), tf);
 
-    while(1)
-    {
-        vel_pub.publish(cmd_twist);
+    cout<<"Relative Pose"<<endl;
+    cout<<"X: "<<tf.getOrigin().getZ()<<endl;
+    cout<<"Y: "<<tf.getOrigin().getY()<<endl;
+    cout<<"Z: "<<tf.getOrigin().getZ()<<endl;
+
+    // cmd_twist.linear.x = 0.4;
+    // cmd_twist.linear.y = -0.2;
+    // cmd_twist.linear.z = 0.0;
+    // cmd_twist.angular.x = 0.0;
+    // cmd_twist.angular.y = 0.0;
+    // cmd_twist.angular.z = 0.0;
+    // reach = true;
+    // sleep(0.5);
+
+    // while(1)
+    // {
+    //     vel_pub.publish(cmd_twist);
         
-        if(cur_odom.pose.pose.position.x - start_odom.pose.pose.position.x > 3.0)
-        {
-            cmd_twist.linear.x = 0.0;
-            cmd_twist.linear.y = 0.0;
-            vel_pub.publish(cmd_twist);
-            break;
-        }
-    }
+    //     if(cur_odom.pose.pose.position.x - start_odom.pose.pose.position.x > 3.0)
+    //     {
+    //         cmd_twist.linear.x = 0.0;
+    //         cmd_twist.linear.y = 0.0;
+    //         vel_pub.publish(cmd_twist);
+    //         break;
+    //     }
+    // }
     
 }
 

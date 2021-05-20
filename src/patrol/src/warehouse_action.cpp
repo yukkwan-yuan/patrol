@@ -25,7 +25,7 @@ private:
     std_msgs::Bool grip;
     const string PLANNING_GROUP = "tm_arm";
     char command;
-    const vector<double> home_p = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.0};
+    const vector<double> home_p = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.000};
     const vector<double> home_r = {M_PI, M_PI/3, -M_PI_4*3, 1.309, -M_PI_2, 0.0};
     const vector<double> middle1_a = {-M_PI, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.000};
     const vector<double> middle1_b = {-2.552, -0.527, 2.218, -1.679, 1.009, 0.000};
@@ -34,6 +34,8 @@ private:
     const vector<double> middler_p = {M_PI_2, -M_PI/3, M_PI_4*3, -1.309, -M_PI_2, 0.0};
     const vector<double> middlep_r = {0.000, 0.000, 0.000, 0.000, -M_PI_2, 0.0};
     const vector<double> position_s = {0, M_PI/3, -M_PI_4*3, 1.309, 0.000, 0.000}; //M_PI_4*3
+
+    const vector<double> joint_sh_scan = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI_2, 0.000};
 
     const vector<double> joint_wh_scan3 = {-0.305, 0.485, 1.635, -1.953, 0.293, 0.160};
     const vector<double> joint_wh_scan2 = {-0.772, -0.048, 2.320, -2.200, 0.758, 0.056};
@@ -81,7 +83,7 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
 }
 
 void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
-{   //cout<<msg.dets_list.size()<<endl;
+{
     if(msg.dets_list.size() != 0 && reach)
         find = true;
     else
@@ -95,8 +97,8 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
         {
             for(int i=0; i<msg.dets_list.size(); i++)
             {
-                x_tmp[i] += msg.dets_list[i].y;
-                y_tmp[i] += msg.dets_list[i].x;
+                x_tmp[i] += msg.dets_list[i].x;
+                y_tmp[i] += msg.dets_list[i].y;
                 z_tmp[i] += msg.dets_list[i].z;
             }
             count++;
@@ -128,7 +130,7 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
             static tf::TransformBroadcaster br;
             tf::Transform tf1;
             string tf_name1 = "tm_target_pose";
-            tf1.setOrigin(tf::Vector3(target_bias.dets_list[i].x, target_bias.dets_list[i].z, target_bias.dets_list[i].y));
+            tf1.setOrigin(tf::Vector3(target_bias.dets_list[i].x, target_bias.dets_list[i].y, target_bias.dets_list[i].z));
             tf1.setRotation(tf::Quaternion(current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w));
             br.sendTransform(tf::StampedTransform(tf1, ros::Time::now(), "camera1_link", tf_name1 + to_string(i)));
         }
@@ -167,13 +169,15 @@ void warehouse_action::Position_Manager()
             joint_group_positions = joint_wh_scan1;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
-            sleep(1);
-            reach = true;
+
             current_pose = move_group.getCurrentPose().pose;
             sleep(1);
+            reach = true;
+            sleep(1);            
 
             ROS_INFO("DONE");
-            cout<<target_amount<<endl;
+            cout<<target_amount<<" target(s)"<<endl;
+            
             if(target_amount > 0)
             {
                 for(int i=0; i<target_amount; i++)
@@ -184,11 +188,6 @@ void warehouse_action::Position_Manager()
                     string tf_name2 = "/tm_target_pose";
                     listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
                     listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
-
-                    cout<<"Relative Pose"<<endl;
-                    cout<<tf2.getOrigin().getX()<<endl;
-                    cout<<tf2.getOrigin().getY()<<endl;
-                    cout<<tf2.getOrigin().getZ()<<endl;
 
                     current_pose.position.x += tf2.getOrigin().getX();
                     current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
@@ -203,15 +202,21 @@ void warehouse_action::Position_Manager()
                     move_group.setPoseTarget(current_pose);
                     success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
+                    
+                    grip.data = true;
+                    gripper_pub.publish(grip);
+                    sleep(0.5);
 
+                    current_pose.position.y -= -0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+                    move_group.move();
+                    
                     target_number++;
 
                     if(target_number == 1)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1); 
-
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place1_mid;
@@ -246,10 +251,6 @@ void warehouse_action::Position_Manager()
                     }
                     if(target_number == 2)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);          
-
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place2_mid;
@@ -283,11 +284,7 @@ void warehouse_action::Position_Manager()
                         ROS_INFO("DONE");
                     }
                     if(target_number == 3)
-                    {   
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-
+                    {  
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place3_mid;
@@ -321,11 +318,7 @@ void warehouse_action::Position_Manager()
                         ROS_INFO("DONE");
                     }
                     if(target_number == 4)
-                    {   
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-                    
+                    { 
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place4_mid;
@@ -360,10 +353,6 @@ void warehouse_action::Position_Manager()
                     }
                     if(target_number == 5)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-                    
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place5_mid;
@@ -408,13 +397,14 @@ void warehouse_action::Position_Manager()
             joint_group_positions = joint_wh_scan2;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
-            sleep(1);
-            reach = true;
+            
             current_pose = move_group.getCurrentPose().pose;
             sleep(1);
+            reach = true;
+            sleep(1); 
 
             ROS_INFO("DONE");
-            cout<<target_amount<<endl;
+            cout<<target_amount<<" target(s)"<<endl;
 
             if(target_amount > 0)
             {
@@ -426,11 +416,6 @@ void warehouse_action::Position_Manager()
                     string tf_name2 = "/tm_target_pose";
                     listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
                     listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
-
-                    cout<<"Relative Pose"<<endl;
-                    cout<<tf2.getOrigin().getX()<<endl;
-                    cout<<tf2.getOrigin().getY()<<endl;
-                    cout<<tf2.getOrigin().getZ()<<endl;
 
                     current_pose.position.x += tf2.getOrigin().getX();
                     current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
@@ -446,14 +431,20 @@ void warehouse_action::Position_Manager()
                     success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
 
+                    grip.data = true;
+                    gripper_pub.publish(grip);
+                    sleep(0.5);
+
+                    current_pose.position.y -= -0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+                    move_group.move();
+
                     target_number++;
 
                     if(target_number == 1)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1); 
-
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place1_mid;
@@ -488,10 +479,6 @@ void warehouse_action::Position_Manager()
                     }
                     if(target_number == 2)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);      
-
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place2_mid;
@@ -525,11 +512,7 @@ void warehouse_action::Position_Manager()
                         ROS_INFO("DONE");
                     }
                     if(target_number == 3)
-                    {   
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-
+                    {
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place3_mid;
@@ -563,11 +546,7 @@ void warehouse_action::Position_Manager()
                         ROS_INFO("DONE");
                     }
                     if(target_number == 4)
-                    {   
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-
+                    { 
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place4_mid;
@@ -602,10 +581,6 @@ void warehouse_action::Position_Manager()
                     }
                     if(target_number == 5)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place5_mid;
@@ -651,13 +626,13 @@ void warehouse_action::Position_Manager()
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
             
-            sleep(1);
-            reach = true;
             current_pose = move_group.getCurrentPose().pose;
             sleep(1);
+            reach = true;
+            sleep(1); 
 
             ROS_INFO("DONE");
-            cout<<target_amount<<endl;
+            cout<<target_amount<<" target(s)"<<endl;
             if(target_amount > 0)
             {
                 for(int i=0; i<target_amount; i++)
@@ -668,11 +643,6 @@ void warehouse_action::Position_Manager()
                     string tf_name2 = "/tm_target_pose";
                     listener.waitForTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), ros::Duration(4.0));
                     listener.lookupTransform("/tm_end_eff", tf_name2 + to_string(i), ros::Time(0), tf2);
-
-                    cout<<"Relative Pose"<<endl;
-                    cout<<tf2.getOrigin().getX()<<endl;
-                    cout<<tf2.getOrigin().getY()<<endl;
-                    cout<<tf2.getOrigin().getZ()<<endl;
 
                     current_pose.position.x += tf2.getOrigin().getX();
                     current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
@@ -688,14 +658,20 @@ void warehouse_action::Position_Manager()
                     success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
                     move_group.move();
 
+                    grip.data = true;
+                    gripper_pub.publish(grip);
+                    sleep(0.5);
+
+                    current_pose.position.y -= -0.1;
+
+                    move_group.setPoseTarget(current_pose);
+                    success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+                    move_group.move();
+
                     target_number++;
 
                     if(target_number == 1)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);           
-
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place1_mid;
@@ -730,10 +706,6 @@ void warehouse_action::Position_Manager()
                     }
                     if(target_number == 2)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);          
-
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place2_mid;
@@ -767,11 +739,7 @@ void warehouse_action::Position_Manager()
                         ROS_INFO("DONE");
                     }
                     if(target_number == 3)
-                    {   
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-
+                    {  
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place3_mid;
@@ -805,11 +773,7 @@ void warehouse_action::Position_Manager()
                         ROS_INFO("DONE");
                     }
                     if(target_number == 4)
-                    {   
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-                    
+                    {  
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place4_mid;
@@ -844,10 +808,6 @@ void warehouse_action::Position_Manager()
                     }
                     if(target_number == 5)
                     {
-                        grip.data = true;
-                        gripper_pub.publish(grip);
-                        sleep(1);
-                        
                         ROS_INFO("GO MIDDLE POINT");
 
                         joint_group_positions = joint_place5_mid;
@@ -895,6 +855,16 @@ void warehouse_action::Position_Manager()
    
             ROS_INFO("DONE");
             target_number = 0;
+        }
+        if(command == 's')
+        {
+            ROS_INFO("GO SHELF SCAN POINT");
+
+            joint_group_positions = joint_sh_scan;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("DONE");
         }
         if(command == 'q')
         {
