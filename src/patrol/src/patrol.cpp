@@ -228,13 +228,13 @@ void PatrolNode::Target_four()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 4.368;
-    goal.target_pose.pose.position.y = -4.045;
+    goal.target_pose.pose.position.x = 4.221;
+    goal.target_pose.pose.position.y = -4.352;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = -0.523;
-    goal.target_pose.pose.orientation.w = 0.852;
+    goal.target_pose.pose.orientation.z = -0.508;
+    goal.target_pose.pose.orientation.w = 0.861;
 
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
@@ -358,37 +358,63 @@ void PatrolNode::Target_home()
 void PatrolNode::Test()
 {
     tf::TransformListener listener;
-    tf::StampedTransform tf;
-    string tf_name = "/tag_369";
-    listener.waitForTransform("/base_link", tf_name, ros::Time(0), ros::Duration(4.0));
-    listener.lookupTransform("/base_link", tf_name, ros::Time(0), tf);
+    tf::StampedTransform tf_l;
+    string tf_l_name = "/tag_369";
+
+    static tf::TransformBroadcaster br;
+    tf::Transform tf_b;    
+    string tf_b_name = "/target_four";
+
+    listener.waitForTransform("/base_link", tf_l_name, ros::Time(0), ros::Duration(3.0));
+    listener.lookupTransform("/base_link", tf_l_name, ros::Time(0), tf_l);
 
     cout<<"Relative Pose"<<endl;
-    cout<<"X: "<<tf.getOrigin().getZ()<<endl;
-    cout<<"Y: "<<tf.getOrigin().getY()<<endl;
-    cout<<"Z: "<<tf.getOrigin().getZ()<<endl;
+    cout<<"X: "<<tf_l.getOrigin().getX()<<endl;
+    cout<<"Y: "<<tf_l.getOrigin().getY()<<endl;
+    cout<<"Z: "<<tf_l.getOrigin().getZ()<<endl;
 
-    // cmd_twist.linear.x = 0.4;
-    // cmd_twist.linear.y = -0.2;
-    // cmd_twist.linear.z = 0.0;
-    // cmd_twist.angular.x = 0.0;
-    // cmd_twist.angular.y = 0.0;
-    // cmd_twist.angular.z = 0.0;
-    // reach = true;
-    // sleep(0.5);
+    tf_b.setOrigin(tf::Vector3(-0.680, -(tf_l.getOrigin().getZ()), -0.175));
+    tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
+    br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_369", tf_b_name));
 
-    // while(1)
-    // {
-    //     vel_pub.publish(cmd_twist);
+    listener.waitForTransform("/base_link", tf_b_name, ros::Time(0), ros::Duration(3.0));
+    listener.lookupTransform("/base_link", tf_b_name, ros::Time(0), tf_l);
+
+    cout<<"Relative Pose"<<endl;
+    cout<<"X: "<<tf_l.getOrigin().getX()<<endl;
+    cout<<"Y: "<<tf_l.getOrigin().getY()<<endl;
+    cout<<"Z: "<<tf_l.getOrigin().getZ()<<endl;
+
+    cmd_twist.linear.x = tf_l.getOrigin().getX()/5.0;
+    cmd_twist.linear.y = tf_l.getOrigin().getY()/5.0;
+    cmd_twist.linear.z = 0.0;
+    cmd_twist.angular.x = 0.0;
+    cmd_twist.angular.y = 0.0;
+    cmd_twist.angular.z = 0.0;
+    reach = true;
+    sleep(1.0);
+    cout<<"start_x: "<<start_odom.pose.pose.position.x<<endl;
+    cout<<"start_y: "<<start_odom.pose.pose.position.y<<endl;
+
+    while(1)
+    {
+        vel_pub.publish(cmd_twist);
         
-    //     if(cur_odom.pose.pose.position.x - start_odom.pose.pose.position.x > 3.0)
-    //     {
-    //         cmd_twist.linear.x = 0.0;
-    //         cmd_twist.linear.y = 0.0;
-    //         vel_pub.publish(cmd_twist);
-    //         break;
-    //     }
-    // }
+        if(cur_odom.pose.pose.position.x - start_odom.pose.pose.position.x >= tf_l.getOrigin().getX())
+        {
+            cmd_twist.linear.x = 0.0;
+            cmd_twist.linear.y = 0.0;
+            vel_pub.publish(cmd_twist);
+            cout<<"start_x: "<<start_odom.pose.pose.position.x<<endl;
+            cout<<"start_y: "<<start_odom.pose.pose.position.y<<endl;
+            cout<<"end_x: "<<cur_odom.pose.pose.position.x<<endl;
+            cout<<"end_y: "<<cur_odom.pose.pose.position.y<<endl;
+            break;
+        }
+        
+        // if(cur_odom.pose.pose.position.y - start_odom.pose.pose.position.y >= tf_l.getOrigin().getY())
+        //     cmd_twist.linear.y = 0.0;
+    }
     
 }
 

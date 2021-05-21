@@ -35,7 +35,7 @@ private:
     const vector<double> middlep_r = {0.000, 0.000, 0.000, 0.000, -M_PI_2, 0.0};
     const vector<double> position_s = {0, M_PI/3, -M_PI_4*3, 1.309, 0.000, 0.000}; //M_PI_4*3
 
-    const vector<double> joint_sh_scan = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI_2, 0.000};
+    const vector<double> joint_sh_scan = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, 2.330, 0.000};
 
     const vector<double> joint_wh_scan3 = {-0.305, 0.485, 1.635, -1.953, 0.293, 0.160};
     const vector<double> joint_wh_scan2 = {-0.772, -0.048, 2.320, -2.200, 0.758, 0.056};
