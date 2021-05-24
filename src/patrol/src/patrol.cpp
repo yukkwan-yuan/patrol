@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 
 // ROS
 #include <ros/ros.h>
@@ -7,6 +8,7 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
+#include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <tf/LinearMath/Matrix3x3.h>
@@ -18,6 +20,9 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 class PatrolNode
 {
+private:
+    double cur_roll, cur_pitch, cur_yaw, start_roll, start_pitch, start_yaw, theta;
+    bool reach = true;
 public:
     // ros::Publisher pub_mb_goal;
     PatrolNode(ros::NodeHandle nh);
@@ -28,15 +33,14 @@ public:
     void Target_five();
     void Target_six();
     void Target_home();
-    void Test();
+    void Regulate();
     void Setting_patrol_path();
     void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
 
     ros::Publisher vel_pub;
     ros::Subscriber odom_sub;
     geometry_msgs::Twist cmd_twist;
-    nav_msgs::Odometry start_odom, cur_odom;\
-    bool reach = true;
+    nav_msgs::Odometry start_odom, cur_odom;
 };
 
 PatrolNode::PatrolNode(ros::NodeHandle nh)
@@ -75,6 +79,13 @@ void PatrolNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
         start_odom.twist.twist.angular.x = msg->twist.twist.angular.x;
         start_odom.twist.twist.angular.y = msg->twist.twist.angular.y;
         start_odom.twist.twist.angular.z = msg->twist.twist.angular.z;
+        tf::Quaternion q(
+        msg->pose.pose.orientation.x,
+        msg->pose.pose.orientation.y,
+        msg->pose.pose.orientation.z,
+        msg->pose.pose.orientation.w);
+        tf::Matrix3x3 m(q);
+        m.getRPY(start_roll, start_pitch, start_yaw);
         reach = false;
     }
     else
@@ -92,6 +103,14 @@ void PatrolNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
         cur_odom.twist.twist.angular.x = msg->twist.twist.angular.x;
         cur_odom.twist.twist.angular.y = msg->twist.twist.angular.y;
         cur_odom.twist.twist.angular.z = msg->twist.twist.angular.z;
+
+        tf::Quaternion q(
+        msg->pose.pose.orientation.x,
+        msg->pose.pose.orientation.y,
+        msg->pose.pose.orientation.z,
+        msg->pose.pose.orientation.w);
+        tf::Matrix3x3 m(q);
+        m.getRPY(cur_roll, cur_pitch, cur_yaw);
     }
 }
 
@@ -355,8 +374,10 @@ void PatrolNode::Target_home()
         ROS_INFO("The base failed to move to the goal");
 }
 
-void PatrolNode::Test()
+void PatrolNode::Regulate()
 {
+    reach = true;
+
     tf::TransformListener listener;
     tf::StampedTransform tf_l;
     string tf_l_name = "/tag_369";
@@ -364,16 +385,12 @@ void PatrolNode::Test()
     static tf::TransformBroadcaster br;
     tf::Transform tf_b;    
     string tf_b_name = "/target_four";
+    
 
     listener.waitForTransform("/base_link", tf_l_name, ros::Time(0), ros::Duration(3.0));
     listener.lookupTransform("/base_link", tf_l_name, ros::Time(0), tf_l);
 
-    cout<<"Relative Pose"<<endl;
-    cout<<"X: "<<tf_l.getOrigin().getX()<<endl;
-    cout<<"Y: "<<tf_l.getOrigin().getY()<<endl;
-    cout<<"Z: "<<tf_l.getOrigin().getZ()<<endl;
-
-    tf_b.setOrigin(tf::Vector3(-0.680, -(tf_l.getOrigin().getZ()), -0.175));
+    tf_b.setOrigin(tf::Vector3(-0.720, -(tf_l.getOrigin().getZ()), -0.100));
     tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
     br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_369", tf_b_name));
 
@@ -385,35 +402,79 @@ void PatrolNode::Test()
     cout<<"Y: "<<tf_l.getOrigin().getY()<<endl;
     cout<<"Z: "<<tf_l.getOrigin().getZ()<<endl;
 
-    cmd_twist.linear.x = tf_l.getOrigin().getX()/5.0;
-    cmd_twist.linear.y = tf_l.getOrigin().getY()/5.0;
-    cmd_twist.linear.z = 0.0;
-    cmd_twist.angular.x = 0.0;
-    cmd_twist.angular.y = 0.0;
-    cmd_twist.angular.z = 0.0;
-    reach = true;
-    sleep(1.0);
     cout<<"start_x: "<<start_odom.pose.pose.position.x<<endl;
     cout<<"start_y: "<<start_odom.pose.pose.position.y<<endl;
+    cout<<"start row pitch yaw: "<<start_roll<<" "<<start_pitch<<" "<<start_yaw<<endl;
+    double omega;
+    bool ft = true;
+
+    if(tf_l.getOrigin().getY() > 0)
+    {
+        omega = 0.05;
+        cmd_twist.linear.x = 0.0;
+        cmd_twist.linear.y = 0.0;
+        cmd_twist.linear.z = 0.0;
+        cmd_twist.angular.x = 0.0;
+        cmd_twist.angular.y = 0.0;
+        cmd_twist.angular.z = omega;
+        theta = acos(tf_l.getOrigin().getX()/sqrt(pow(tf_l.getOrigin().getY(), 2) + pow(tf_l.getOrigin().getX(), 2)));
+    }
+    else
+    {
+        omega = -0.05;
+        cmd_twist.linear.x = 0.0;
+        cmd_twist.linear.y = 0.0;
+        cmd_twist.linear.z = 0.0;
+        cmd_twist.angular.x = 0.0;
+        cmd_twist.angular.y = 0.0;
+        cmd_twist.angular.z = omega;
+        theta = -acos(tf_l.getOrigin().getX()/sqrt(pow(tf_l.getOrigin().getY(), 2) + pow(tf_l.getOrigin().getX(), 2)));
+    }
+    cout<<tf::getYaw(tf_l.getRotation())<<endl;
 
     while(1)
     {
         vel_pub.publish(cmd_twist);
-        
-        if(cur_odom.pose.pose.position.x - start_odom.pose.pose.position.x >= tf_l.getOrigin().getX())
+
+        if(cur_yaw - start_yaw < theta && ft)
+        {
+            continue;
+        }
+        else if(cur_odom.pose.pose.position.x - start_odom.pose.pose.position.x < tf_l.getOrigin().getX())
+        {
+            ft = false;
+            cmd_twist.linear.x = tf_l.getOrigin().getX()/5.0;
+            cmd_twist.linear.y = 0.0;
+            cmd_twist.linear.z = 0.0;
+            cmd_twist.angular.x = 0.0;
+            cmd_twist.angular.y = 0.0;
+            cmd_twist.angular.z = 0.0;
+        }
+        else if(cur_yaw -  start_yaw > tf::getYaw(tf_l.getRotation()))
         {
             cmd_twist.linear.x = 0.0;
             cmd_twist.linear.y = 0.0;
+            cmd_twist.linear.z = 0.0;
+            cmd_twist.angular.x = 0.0;
+            cmd_twist.angular.y = 0.0;
+            cmd_twist.angular.z = -omega;
+        }
+        else
+        {
+            cmd_twist.linear.x = 0.0;
+            cmd_twist.linear.y = 0.0;
+            cmd_twist.linear.z = 0.0;
+            cmd_twist.angular.x = 0.0;
+            cmd_twist.angular.y = 0.0;
+            cmd_twist.angular.z = 0.0;
             vel_pub.publish(cmd_twist);
             cout<<"start_x: "<<start_odom.pose.pose.position.x<<endl;
             cout<<"start_y: "<<start_odom.pose.pose.position.y<<endl;
             cout<<"end_x: "<<cur_odom.pose.pose.position.x<<endl;
             cout<<"end_y: "<<cur_odom.pose.pose.position.y<<endl;
+            cout<<"start row pitch yaw: "<<cur_roll<<" "<<cur_pitch<<" "<<cur_yaw<<endl;
             break;
         }
-        
-        // if(cur_odom.pose.pose.position.y - start_odom.pose.pose.position.y >= tf_l.getOrigin().getY())
-        //     cmd_twist.linear.y = 0.0;
     }
     
 }
@@ -466,7 +527,9 @@ void PatrolNode::Setting_patrol_path()
         
         if(c == 't')
         {
-            Test();
+            Target_three();
+            Target_four();
+            Regulate();
         }
 
         if(c == 'q')
