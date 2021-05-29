@@ -64,6 +64,8 @@ add_message_files(
 
   Track3D.msg
   Track3DArray.msg
+
+  StringArray.msg
 )
 
 ## Generate services in the 'srv' folder

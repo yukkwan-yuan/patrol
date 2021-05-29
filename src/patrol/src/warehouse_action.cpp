@@ -16,6 +16,7 @@
 #include <detection_msgs/Detection2DTrig.h>
 #include <detection_msgs/Det3D.h>
 #include <detection_msgs/Det3DArray.h>
+#include <detection_msgs/StringArray.h>
 
 using namespace std;
 
@@ -60,10 +61,12 @@ private:
 public:
     warehouse_action(ros::NodeHandle nh);
     void det_callback(detection_msgs::Det3DArray msg);
+    void mis_callback(detection_msgs::StringArray msg);
     void Position_Manager();
 
-    ros::Publisher gripper_pub;
+    ros::Publisher gripper_pub, mis_pub;
     ros::Subscriber det_sub;
+    ros::Subscriber mis_sub;
     geometry_msgs::Pose current_pose;
 };
 
@@ -77,7 +80,15 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     z_tmp = new float[10] ();
 
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
-    // det_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::det_callback, this);
+    mis_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::mis_callback, this);
+    // mis_pub = nh.advertise<detection_msgs::StringArray>("/missing_bottle", 1);
+    // detection_msgs::StringArray sa;
+    // string s;
+    // s = "abc";
+    // sa.strings.push_back(s);
+    // s = "123";
+    // sa.strings.push_back(s);
+    // mis_pub.publish(sa);
     det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
     Position_Manager();
 }
@@ -134,6 +145,14 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
             tf1.setRotation(tf::Quaternion(current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w));
             br.sendTransform(tf::StampedTransform(tf1, ros::Time::now(), "camera1_link", tf_name1 + to_string(i)));
         }
+    }
+}
+
+void warehouse_action::mis_callback(detection_msgs::StringArray msg)
+{
+    for(int i=0; i<msg.strings.size(); i++)
+    {
+        cout<<msg.strings[i]<<endl;
     }
 }
 
