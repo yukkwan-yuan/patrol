@@ -7,6 +7,7 @@
 //ROS
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int8.h>
 #include <geometry_msgs/Pose.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <tf/transform_listener.h>
@@ -62,11 +63,13 @@ public:
     warehouse_action(ros::NodeHandle nh);
     void det_callback(detection_msgs::Det3DArray msg);
     void mis_callback(detection_msgs::StringArray msg);
+    void loc_callback(std_msgs::Int8 msg);
     void Position_Manager();
 
     ros::Publisher gripper_pub, mis_pub;
     ros::Subscriber det_sub;
     ros::Subscriber mis_sub;
+    ros::Subscriber loc_sub;
     geometry_msgs::Pose current_pose;
 };
 
@@ -89,6 +92,7 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     // s = "123";
     // sa.strings.push_back(s);
     // mis_pub.publish(sa);
+    loc_sub = nh.subscribe("/mob_plat/location", 1, &warehouse_action::loc_callback, this);
     det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
     Position_Manager();
 }
@@ -154,6 +158,13 @@ void warehouse_action::mis_callback(detection_msgs::StringArray msg)
     {
         cout<<msg.strings[i]<<endl;
     }
+}
+
+void warehouse_action::loc_callback(std_msgs::Int8 msg)
+{
+    printf("%d\n", msg.data);
+    if(msg.data == 1)
+        cout<<"At Position One"<<endl;
 }
 
 void warehouse_action::Position_Manager()

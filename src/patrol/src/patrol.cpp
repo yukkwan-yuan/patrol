@@ -13,6 +13,7 @@
 #include <tf/transform_listener.h>
 #include <tf/LinearMath/Matrix3x3.h>
 #include <tf/LinearMath/Vector3.h>
+#include <std_msgs/Int8.h>
 
 using namespace std;
 
@@ -38,9 +39,11 @@ public:
     void odom_callback(const nav_msgs::Odometry::ConstPtr& msg);
 
     ros::Publisher vel_pub;
+    ros::Publisher loc_pub;
     ros::Subscriber odom_sub;
     geometry_msgs::Twist cmd_twist;
     nav_msgs::Odometry start_odom, cur_odom;
+    std_msgs::Int8 location;
 };
 
 PatrolNode::PatrolNode(ros::NodeHandle nh)
@@ -49,6 +52,7 @@ PatrolNode::PatrolNode(ros::NodeHandle nh)
     spinner.start();
 
     vel_pub = nh.advertise<geometry_msgs::Twist>("/mob_plat/cmd_vel", 1);
+    loc_pub = nh.advertise<std_msgs::Int8>("/mob_plat/location", 1);
     odom_sub = nh.subscribe("/odom_combined", 1, &PatrolNode::odom_callback, this);
     Setting_patrol_path();
 }
@@ -156,6 +160,9 @@ void PatrolNode::Target_one()
         ROS_INFO("Hooray, the base moved to the goal");
     else
         ROS_INFO("Sending Next Goal");
+
+    location.data = 1;
+    loc_pub.publish(location);
 }
 
 void PatrolNode::Target_two()
@@ -192,6 +199,9 @@ void PatrolNode::Target_two()
         ROS_INFO("Hooray, the base moved to the goal");
     else
         ROS_INFO("Sending Next Goal");
+
+    location.data = 2;
+    loc_pub.publish(location);
 }
 
 void PatrolNode::Target_three()
@@ -228,6 +238,9 @@ void PatrolNode::Target_three()
         ROS_INFO("Hooray, the base moved to the goal");
     else
         ROS_INFO("Sending Next Goal");
+
+    location.data = 3;
+    loc_pub.publish(location);
 }
 
 void PatrolNode::Target_four()
@@ -264,6 +277,9 @@ void PatrolNode::Target_four()
         ROS_INFO("Hooray, the base moved to the goal");
     else
         ROS_INFO("Sending Next Goal");
+
+    location.data = 4;
+    loc_pub.publish(location);
 }
 
 void PatrolNode::Target_five()
@@ -300,6 +316,9 @@ void PatrolNode::Target_five()
         ROS_INFO("Hooray, the base moved to the goal");
     else
         ROS_INFO("Sending Next Goal");
+
+    location.data = 5;
+    loc_pub.publish(location);
 }
 
 void PatrolNode::Target_six()
@@ -336,6 +355,9 @@ void PatrolNode::Target_six()
         ROS_INFO("Hooray, the base moved to the goal");
     else
         ROS_INFO("Sending Next Goal");
+
+    location.data = 6;
+    loc_pub.publish(location);
 }
 
 void PatrolNode::Target_home()
@@ -477,6 +499,8 @@ void PatrolNode::Regulate()
         }
     }
     
+    location.data = 41;
+    loc_pub.publish(location);
 }
 
 void PatrolNode::Setting_patrol_path()
@@ -486,34 +510,22 @@ void PatrolNode::Setting_patrol_path()
         char c = getchar();
 
         if(c == '1')
-        {
             Target_one();
-        }
 
         if(c == '2')
-        {
             Target_two();
-        }
 
         if(c == '3')
-        {
             Target_three();
-        }
 
         if(c == '4')
-        {
             Target_four();
-        }
 
         if(c == '5')
-        {
             Target_five();
-        }
 
         if(c == '6')
-        {
             Target_six();
-        }
 
         if(c == 's')
         {
@@ -530,6 +542,12 @@ void PatrolNode::Setting_patrol_path()
             Target_three();
             Target_four();
             Regulate();
+        }
+
+        if(c == 'l')
+        {
+            location.data = 41;
+            loc_pub.publish(location);
         }
 
         if(c == 'q')
