@@ -71,6 +71,7 @@ public:
     ros::Subscriber mis_sub;
     ros::Subscriber loc_sub;
     geometry_msgs::Pose current_pose;
+    detection_msgs::StringArray mis_list;
 };
 
 warehouse_action::warehouse_action(ros::NodeHandle nh)
@@ -84,14 +85,14 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
 
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
     mis_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::mis_callback, this);
-    // mis_pub = nh.advertise<detection_msgs::StringArray>("/missing_bottle", 1);
-    // detection_msgs::StringArray sa;
-    // string s;
-    // s = "abc";
-    // sa.strings.push_back(s);
-    // s = "123";
-    // sa.strings.push_back(s);
-    // mis_pub.publish(sa);
+    mis_pub = nh.advertise<detection_msgs::StringArray>("/missing_bottle", 1);
+    detection_msgs::StringArray sa;
+    string s;
+    s = "Lemonade";
+    sa.strings.push_back(s);
+    s = "Coke";
+    sa.strings.push_back(s);
+    mis_pub.publish(sa);
     loc_sub = nh.subscribe("/mob_plat/location", 1, &warehouse_action::loc_callback, this);
     det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
     Position_Manager();
@@ -123,15 +124,21 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
 
         for(int i=0; i<msg.dets_list.size(); i++)
         {
-            bias.class_name = msg.dets_list[i].class_name;
-            bias.class_id = msg.dets_list[i].class_id;
-            bias.x = x_tmp[i]/10;
-            bias.y = y_tmp[i]/10;
-            bias.z = z_tmp[i]/10;
-            x_tmp[i] = 0;
-            y_tmp[i] = 0;
-            z_tmp[i] = 0;
-            target_bias.dets_list.push_back(bias);
+            for(int j=0; j<mis_list.strings.size(); j++)
+            {
+                if(mis_list.strings[j] == msg.dets_list[i].class_name)
+                {
+                    bias.class_name = msg.dets_list[i].class_name;
+                    bias.class_id = msg.dets_list[i].class_id;
+                    bias.x = x_tmp[i]/10;
+                    bias.y = y_tmp[i]/10;
+                    bias.z = z_tmp[i]/10;
+                    x_tmp[i] = 0;
+                    y_tmp[i] = 0;
+                    z_tmp[i] = 0;
+                    target_bias.dets_list.push_back(bias);
+                }
+            }
         }
         collect = true;
     }
@@ -154,6 +161,8 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
 
 void warehouse_action::mis_callback(detection_msgs::StringArray msg)
 {
+    mis_list.strings = msg.strings;
+
     for(int i=0; i<msg.strings.size(); i++)
     {
         cout<<msg.strings[i]<<endl;
@@ -185,6 +194,9 @@ void warehouse_action::Position_Manager()
         if(command == 'h')
         {
             ROS_INFO("GO HOME");
+
+            grip.data = false;
+            gripper_pub.publish(grip);
 
             joint_group_positions = home_p;
             move_group.setJointValueTarget(joint_group_positions);
