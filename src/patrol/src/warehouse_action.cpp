@@ -88,9 +88,11 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     mis_pub = nh.advertise<detection_msgs::StringArray>("/missing_bottle", 1);
     detection_msgs::StringArray sa;
     string s;
-    s = "Lemonade";
+    s = "Soda";
     sa.strings.push_back(s);
-    s = "Coke";
+    s = "MineralWater";
+    sa.strings.push_back(s);
+    s = "PinkSoda";
     sa.strings.push_back(s);
     mis_pub.publish(sa);
     loc_sub = nh.subscribe("/mob_plat/location", 1, &warehouse_action::loc_callback, this);
@@ -129,6 +131,7 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
                 if(mis_list.strings[j] == msg.dets_list[i].class_name)
                 {
                     bias.class_name = msg.dets_list[i].class_name;
+                    cout<<bias.class_name<<endl;
                     bias.class_id = msg.dets_list[i].class_id;
                     bias.x = x_tmp[i]/10;
                     bias.y = y_tmp[i]/10;
@@ -907,6 +910,30 @@ void warehouse_action::Position_Manager()
             move_group.move();
 
             ROS_INFO("DONE");
+        }
+        if(command == '1')
+        {
+            ROS_INFO("GO SCANNING POINT 1");
+        
+            joint_group_positions = joint_wh_scan1;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+        }
+        if(command == '2')
+        {
+            ROS_INFO("GO SCANNING POINT 2");
+        
+            joint_group_positions = joint_wh_scan2;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+        }
+        if(command == '3')
+        {
+            ROS_INFO("GO SCANNING POINT 3");
+        
+            joint_group_positions = joint_wh_scan3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
         }
         if(command == 'q')
         {

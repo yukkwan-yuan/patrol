@@ -16,6 +16,7 @@ static const string COLOR_GREEN = "\e[0;32m";
 static const string COLOR_NC = "\e[0m";
 
 int first_t = 0;
+double k = 0;
 double last_max_speed;
 
 class NavigationController
@@ -57,8 +58,11 @@ void NavigationController::nav_cmd_vel_callback(const geometry_msgs::Twist::Cons
             first_t = 1;
         }
         if(last_max_speed < max_speed )
-            last_max_speed += (max_speed - last_max_speed)/50;
+        {
+            last_max_speed += (max_speed - last_max_speed)/50 + k;
+            k += 0.01;
             // last_max_speed = max_speed;
+        }
     }
     else
         last_max_speed = max_speed;

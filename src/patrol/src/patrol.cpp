@@ -221,13 +221,13 @@ void PatrolNode::Target_three()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 1.878;
-    goal.target_pose.pose.position.y = 0.275;
+    goal.target_pose.pose.position.x = 1.740;
+    goal.target_pose.pose.position.y = 0.251;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = -0.508;
-    goal.target_pose.pose.orientation.w = 0.861;
+    goal.target_pose.pose.orientation.z = -0.530;
+    goal.target_pose.pose.orientation.w = 0.848;
 
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
@@ -260,13 +260,13 @@ void PatrolNode::Target_four()
     goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.stamp = ros::Time::now();
 
-    goal.target_pose.pose.position.x = 4.221;
-    goal.target_pose.pose.position.y = -4.352;
+    goal.target_pose.pose.position.x = 3.281;
+    goal.target_pose.pose.position.y = -3.910;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = -0.508;
-    goal.target_pose.pose.orientation.w = 0.861;
+    goal.target_pose.pose.orientation.z = -0.546;
+    goal.target_pose.pose.orientation.w = 0.838;
 
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
