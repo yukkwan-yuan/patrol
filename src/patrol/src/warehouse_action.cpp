@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
+#include <std_msgs/String.h> 
 #include <geometry_msgs/Pose.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <tf/transform_listener.h>
@@ -28,6 +29,7 @@ private:
     const string PLANNING_GROUP = "tm_arm";
     char command;
     const vector<double> home_p = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.000};
+    const vector<double> home_p_2 = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, M_PI_2, 0.000};
     const vector<double> home_r = {M_PI, M_PI/3, -M_PI_4*3, 1.309, -M_PI_2, 0.0};
     const vector<double> middle1_a = {-M_PI, -M_PI_4, M_PI*2/3, -1.309, M_PI, 0.000};
     const vector<double> middle1_b = {-2.552, -0.527, 2.218, -1.679, 1.009, 0.000};
@@ -66,12 +68,14 @@ public:
     void loc_callback(std_msgs::Int8 msg);
     void Position_Manager();
 
-    ros::Publisher gripper_pub, mis_pub;
+    ros::Publisher gripper_pub;
+    ros::Publisher mis_pub;
+    ros::Publisher prod_pub;
     ros::Subscriber det_sub;
     ros::Subscriber mis_sub;
     ros::Subscriber loc_sub;
     geometry_msgs::Pose current_pose;
-    detection_msgs::StringArray mis_list;
+    detection_msgs::StringArray mis_list, sa, prod_list;
 };
 
 warehouse_action::warehouse_action(ros::NodeHandle nh)
@@ -84,13 +88,13 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     z_tmp = new float[10] ();
 
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
+    prod_pub = nh.advertise<detection_msgs::StringArray>("/product/information", 1);
     mis_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::mis_callback, this);
     mis_pub = nh.advertise<detection_msgs::StringArray>("/missing_bottle", 1);
-    detection_msgs::StringArray sa;
     string s;
-    s = "Soda";
+    s = "Coke";
     sa.strings.push_back(s);
-    s = "MineralWater";
+    s = "Lemonade";
     sa.strings.push_back(s);
     s = "PinkSoda";
     sa.strings.push_back(s);
@@ -149,7 +153,7 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
     if(collect)
     {   
         target_amount = target_bias.dets_list.size();
-        // cout<<target_bias.dets_list.size()<<endl;
+
         for(int i=0; i<target_bias.dets_list.size(); i++)
         {
             static tf::TransformBroadcaster br;
@@ -158,6 +162,10 @@ void warehouse_action::det_callback(detection_msgs::Det3DArray msg)
             tf1.setOrigin(tf::Vector3(target_bias.dets_list[i].x, target_bias.dets_list[i].y, target_bias.dets_list[i].z));
             tf1.setRotation(tf::Quaternion(current_pose.orientation.x, current_pose.orientation.y, current_pose.orientation.z, current_pose.orientation.w));
             br.sendTransform(tf::StampedTransform(tf1, ros::Time::now(), "camera1_link", tf_name1 + to_string(i)));
+
+            string b;
+            b = target_bias.dets_list[i].class_name;
+            prod_list.strings.push_back(b);
         }
     }
 }
@@ -209,6 +217,7 @@ void warehouse_action::Position_Manager()
         }
         if(command == 'w')
         {
+            detection_msgs::StringArray prod_list;
             ROS_INFO("GO SCANNING POINT 1");
         
             joint_group_positions = joint_wh_scan1;
@@ -900,6 +909,8 @@ void warehouse_action::Position_Manager()
    
             ROS_INFO("DONE");
             target_number = 0;
+
+            prod_pub.publish(prod_list);
         }
         if(command == 's')
         {
@@ -937,6 +948,10 @@ void warehouse_action::Position_Manager()
         }
         if(command == 'q')
         {
+            joint_group_positions = home_p_2;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
             ROS_INFO("QUIT");
             break;
         }
