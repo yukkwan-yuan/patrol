@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
 
 //ROS
 #include <ros/ros.h>
@@ -11,6 +12,9 @@
 #include <std_msgs/String.h> 
 #include <geometry_msgs/Pose.h>
 #include <moveit/move_group_interface/move_group_interface.h>
+#include <tf/tf.h>
+#include <tf/LinearMath/Matrix3x3.h>
+#include <tf/LinearMath/Vector3.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 
@@ -56,6 +60,8 @@ private:
     const vector<double> joint_place5 = {0.012, 0.647, -2.194, -1.579, 1.552, 3.040};
     const vector<double> joint_place5_mid = {0.002, 0.755, -1.787, -2.089, 1.533, 3.035};
 
+    const vector<double> joint_place_tag = {-1.558, -0.568, 2.070, -1.501, 1.555, 0.000};
+
     float *x_tmp, *y_tmp, *z_tmp;
     int count = 0, target_amount = 0, target_number = 0;
     bool find = false, grab = false, collect = false, reach = false;
@@ -74,7 +80,7 @@ public:
     ros::Subscriber det_sub;
     ros::Subscriber mis_sub;
     ros::Subscriber loc_sub;
-    geometry_msgs::Pose current_pose;
+    geometry_msgs::Pose current_pose, tag_pose;
     detection_msgs::StringArray mis_list, sa, prod_list;
 };
 
@@ -946,6 +952,264 @@ void warehouse_action::Position_Manager()
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
         }
+        if(command == 'r')
+        {
+            ROS_INFO("GO JOINT PLACE TAG");
+
+            joint_group_positions = joint_place_tag;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            sleep(1);
+
+            tf::TransformListener listener;
+            tf::StampedTransform tf_l, tf_bl2coke, tf_bl2soda, tf_bl2lemonade, tf_bl2pinksoda, tf_bl2mineralwater;
+            std::string tf_l_name = "/tag_308";
+
+            static tf::TransformBroadcaster br;
+            tf::Transform tf_b;
+            std::string tf_coke_name = "/target_Coke";
+            std::string tf_soda_name = "/target_Soda";
+            std::string tf_lemonade_name = "/target_Lemonade";
+            std::string tf_pinksoda_name = "/target_PinkSoda";
+            std::string tf_mineralwater_name = "/target_MineralWater";
+
+            listener.waitForTransform("/base_link", tf_l_name, ros::Time(0), ros::Duration(3.0));
+            listener.lookupTransform("/base_link", tf_l_name, ros::Time(0), tf_l);
+
+            tf_b.setOrigin(tf::Vector3(0.05, -0.11, 0.40));
+            tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
+            br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_308", tf_coke_name));
+            listener.waitForTransform("/base_link", tf_coke_name, ros::Time(0), ros::Duration(3.0));
+            listener.lookupTransform("/base_link", tf_coke_name, ros::Time(0), tf_bl2coke);
+
+            tf_b.setOrigin(tf::Vector3(-0.08, -0.11, 0.40));
+            tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
+            br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_308", tf_mineralwater_name));
+            listener.waitForTransform("/base_link", tf_mineralwater_name, ros::Time(0), ros::Duration(3.0));
+            listener.lookupTransform("/base_link", tf_mineralwater_name, ros::Time(0), tf_bl2mineralwater);
+
+            tf_b.setOrigin(tf::Vector3(0.18, -0.11, 0.40));
+            tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
+            br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_308", tf_pinksoda_name));
+            listener.waitForTransform("/base_link", tf_pinksoda_name, ros::Time(0), ros::Duration(3.0));
+            listener.lookupTransform("/base_link", tf_pinksoda_name, ros::Time(0), tf_bl2pinksoda);
+
+            tf_b.setOrigin(tf::Vector3(-0.21, -0.11, 0.40));
+            tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
+            br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_308", tf_lemonade_name));
+            listener.waitForTransform("/base_link", tf_lemonade_name, ros::Time(0), ros::Duration(3.0));
+            listener.lookupTransform("/base_link", tf_lemonade_name, ros::Time(0), tf_bl2lemonade);
+
+            tf_b.setOrigin(tf::Vector3(-0.34, -0.11, 0.40));
+            tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
+            br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_308", tf_soda_name));
+            listener.waitForTransform("/base_link", tf_soda_name, ros::Time(0), ros::Duration(3.0));
+            listener.lookupTransform("/base_link", tf_soda_name, ros::Time(0), tf_bl2soda);
+
+            ROS_INFO("GO JOINT PLACE 3");
+        
+            joint_group_positions = joint_place3_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            joint_group_positions = joint_place3;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            grip.data = true;
+            gripper_pub.publish(grip);
+
+            sleep(1);
+
+            joint_group_positions = joint_place3_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO JOINT PLACE TARGET");
+
+            joint_group_positions = joint_place_tag;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            tag_pose = move_group.getCurrentPose().pose;
+            tag_pose.position.x = tf_bl2coke.getOrigin().getX();
+            tag_pose.position.y = tf_bl2coke.getOrigin().getY();
+            tag_pose.position.z = tf_bl2coke.getOrigin().getZ();
+            tag_pose.position.y += 0.10;
+            tag_pose.position.z += 0.10;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            tag_pose.position.y -= 0.10;
+            tag_pose.position.z -= 0.10;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+
+            grip.data = false;
+            gripper_pub.publish(grip);
+
+            tag_pose.position.y += 0.15;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+
+            joint_group_positions = joint_place_tag;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO JOINT PLACE 2");
+        
+            joint_group_positions = joint_place2_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            joint_group_positions = joint_place2;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            grip.data = true;
+            gripper_pub.publish(grip);
+
+            sleep(1);
+
+            joint_group_positions = joint_place2_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO JOINT PLACE TARGET");
+
+            joint_group_positions = joint_place_tag;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            tag_pose = move_group.getCurrentPose().pose;
+            tag_pose.position.x = tf_bl2mineralwater.getOrigin().getX();
+            tag_pose.position.y = tf_bl2mineralwater.getOrigin().getY();
+            tag_pose.position.z = tf_bl2mineralwater.getOrigin().getZ();           
+            tag_pose.position.y += 0.10;
+            tag_pose.position.z += 0.10;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            tag_pose.position.y -= 0.10;
+            tag_pose.position.z -= 0.10;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+
+            grip.data = false;
+            gripper_pub.publish(grip);
+
+            tag_pose.position.y += 0.15;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+
+            joint_group_positions = joint_place_tag;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO JOINT PLACE 1");
+        
+            joint_group_positions = joint_place1_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            joint_group_positions = joint_place1;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            grip.data = true;
+            gripper_pub.publish(grip);
+
+            sleep(1);
+
+            joint_group_positions = joint_place1_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("GO JOINT PLACE TARGET");
+
+            joint_group_positions = joint_place_tag;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            tag_pose = move_group.getCurrentPose().pose;
+            tag_pose.position.x = tf_bl2pinksoda.getOrigin().getX();
+            tag_pose.position.y = tf_bl2pinksoda.getOrigin().getY();
+            tag_pose.position.z = tf_bl2pinksoda.getOrigin().getZ();           
+            tag_pose.position.y += 0.10;
+            tag_pose.position.z += 0.10;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            tag_pose.position.y -= 0.10;
+            tag_pose.position.z -= 0.10;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+
+            grip.data = false;
+            gripper_pub.publish(grip);
+
+            tag_pose.position.y += 0.15;
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            move_group.setPoseTarget(tag_pose);
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+
+            joint_group_positions = joint_place_tag;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("DONE");
+        }
+        if(command == 't')
+        {
+            current_pose = move_group.getCurrentPose().pose;
+
+            std::cout<< current_pose.orientation.x << std::endl;
+            std::cout<< current_pose.orientation.y << std::endl;
+            std::cout<< current_pose.orientation.z << std::endl;
+            std::cout<< current_pose.orientation.w << std::endl;
+        }
         if(command == 'q')
         {
             joint_group_positions = home_p_2;
@@ -958,11 +1222,21 @@ void warehouse_action::Position_Manager()
     }
 }
 
+warehouse_action *wa;
+
+void sigHandler(int signum) 
+{
+    delete wa;
+
+    exit(0);
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "warehouse_action");
     ros::NodeHandle nh;
-    warehouse_action node(nh);
+    signal(SIGINT, sigHandler);
+    wa = new warehouse_action(nh);
     ros::spin();
     return 0;
 }

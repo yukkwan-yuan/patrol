@@ -143,13 +143,13 @@ void PatrolNode::Target_one()
     // goal.target_pose.pose.orientation.z = 0.850;
     // goal.target_pose.pose.orientation.w = 0.526;
 
-    goal.target_pose.pose.position.x = 7.272;
-    goal.target_pose.pose.position.y = -1.206;
+    goal.target_pose.pose.position.x = 8.071;
+    goal.target_pose.pose.position.y = -3.148;
     goal.target_pose.pose.position.z = 0.000;
     goal.target_pose.pose.orientation.x = 0.000;
     goal.target_pose.pose.orientation.y = 0.000;
-    goal.target_pose.pose.orientation.z = 0.900;
-    goal.target_pose.pose.orientation.w = 0.436;
+    goal.target_pose.pose.orientation.z = 0.850;
+    goal.target_pose.pose.orientation.w = 0.528;
 
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
