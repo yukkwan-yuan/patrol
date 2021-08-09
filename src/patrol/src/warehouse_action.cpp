@@ -43,7 +43,7 @@ private:
     const vector<double> middlep_r = {0.000, 0.000, 0.000, 0.000, -M_PI_2, 0.0};
     const vector<double> position_s = {0, M_PI/3, -M_PI_4*3, 1.309, 0.000, 0.000}; //M_PI_4*3
 
-    const vector<double> joint_sh_scan = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, 2.330, 0.000};
+    const vector<double> joint_sh_scan = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, 2.800, 0.000};
 
     const vector<double> joint_wh_scan3 = {-0.305, 0.485, 1.635, -1.953, 0.293, 0.160};
     const vector<double> joint_wh_scan2 = {-0.772, -0.048, 2.320, -2.200, 0.758, 0.056};
@@ -65,6 +65,7 @@ private:
     float *x_tmp, *y_tmp, *z_tmp;
     int count = 0, target_amount = 0, target_number = 0;
     bool find = false, grab = false, collect = false, reach = false;
+    std_msgs::Int8 replacement_finished;
     detection_msgs::Det3DArray target_bias;
     detection_msgs::Det3D bias;
 public:
@@ -77,6 +78,7 @@ public:
     ros::Publisher gripper_pub;
     ros::Publisher mis_pub;
     ros::Publisher prod_pub;
+    ros::Publisher replace_finish_pub;
     ros::Subscriber det_sub;
     ros::Subscriber mis_sub;
     ros::Subscriber loc_sub;
@@ -95,6 +97,7 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
 
     gripper_pub = nh.advertise<std_msgs::Bool>("/gripper/cmd_gripper", 1);
     prod_pub = nh.advertise<detection_msgs::StringArray>("/product/information", 1);
+    replace_finish_pub = nh.advertise<std_msgs::Int8>("/replacement_finished", 1);
     mis_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::mis_callback, this);
     mis_pub = nh.advertise<detection_msgs::StringArray>("/missing_bottle", 1);
     string s;
@@ -105,6 +108,8 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     s = "PinkSoda";
     sa.strings.push_back(s);
     mis_pub.publish(sa);
+    replacement_finished.data = 0;
+    replace_finish_pub.publish(replacement_finished);
     loc_sub = nh.subscribe("/mob_plat/location", 1, &warehouse_action::loc_callback, this);
     det_sub = nh.subscribe("/scan_clustering_node/det3d_result", 1, &warehouse_action::det_callback, this);
     Position_Manager();
@@ -964,10 +969,9 @@ void warehouse_action::Position_Manager()
 
             tf::TransformListener listener;
             tf::StampedTransform tf_l, tf_bl2coke, tf_bl2soda, tf_bl2lemonade, tf_bl2pinksoda, tf_bl2mineralwater;
-            std::string tf_l_name = "/tag_308";
-
             static tf::TransformBroadcaster br;
             tf::Transform tf_b;
+            std::string tf_l_name = "/tag_308";
             std::string tf_coke_name = "/target_Coke";
             std::string tf_soda_name = "/target_Soda";
             std::string tf_lemonade_name = "/target_Lemonade";
@@ -1007,6 +1011,11 @@ void warehouse_action::Position_Manager()
             listener.waitForTransform("/base_link", tf_soda_name, ros::Time(0), ros::Duration(3.0));
             listener.lookupTransform("/base_link", tf_soda_name, ros::Time(0), tf_bl2soda);
 
+            tf::StampedTransform product_at_p1 = tf_bl2soda;
+            tf::StampedTransform product_at_p2 = tf_bl2pinksoda;
+            tf::StampedTransform product_at_p3 = tf_bl2coke;
+
+            //START REPLACEMENT
             ROS_INFO("GO JOINT PLACE 3");
         
             joint_group_positions = joint_place3_mid;
@@ -1020,8 +1029,6 @@ void warehouse_action::Position_Manager()
             grip.data = true;
             gripper_pub.publish(grip);
 
-            sleep(1);
-
             joint_group_positions = joint_place3_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
@@ -1033,9 +1040,9 @@ void warehouse_action::Position_Manager()
             move_group.move();
 
             tag_pose = move_group.getCurrentPose().pose;
-            tag_pose.position.x = tf_bl2coke.getOrigin().getX();
-            tag_pose.position.y = tf_bl2coke.getOrigin().getY();
-            tag_pose.position.z = tf_bl2coke.getOrigin().getZ();
+            tag_pose.position.x = product_at_p3.getOrigin().getX();
+            tag_pose.position.y = product_at_p3.getOrigin().getY();
+            tag_pose.position.z = product_at_p3.getOrigin().getZ();
             tag_pose.position.y += 0.10;
             tag_pose.position.z += 0.10;
             move_group.setPoseTarget(tag_pose);
@@ -1084,8 +1091,6 @@ void warehouse_action::Position_Manager()
             grip.data = true;
             gripper_pub.publish(grip);
 
-            sleep(1);
-
             joint_group_positions = joint_place2_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
@@ -1097,9 +1102,9 @@ void warehouse_action::Position_Manager()
             move_group.move();
 
             tag_pose = move_group.getCurrentPose().pose;
-            tag_pose.position.x = tf_bl2mineralwater.getOrigin().getX();
-            tag_pose.position.y = tf_bl2mineralwater.getOrigin().getY();
-            tag_pose.position.z = tf_bl2mineralwater.getOrigin().getZ();           
+            tag_pose.position.x = product_at_p2.getOrigin().getX();
+            tag_pose.position.y = product_at_p2.getOrigin().getY();
+            tag_pose.position.z = product_at_p2.getOrigin().getZ();           
             tag_pose.position.y += 0.10;
             tag_pose.position.z += 0.10;
             move_group.setPoseTarget(tag_pose);
@@ -1148,8 +1153,6 @@ void warehouse_action::Position_Manager()
             grip.data = true;
             gripper_pub.publish(grip);
 
-            sleep(1);
-
             joint_group_positions = joint_place1_mid;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
@@ -1161,9 +1164,9 @@ void warehouse_action::Position_Manager()
             move_group.move();
 
             tag_pose = move_group.getCurrentPose().pose;
-            tag_pose.position.x = tf_bl2pinksoda.getOrigin().getX();
-            tag_pose.position.y = tf_bl2pinksoda.getOrigin().getY();
-            tag_pose.position.z = tf_bl2pinksoda.getOrigin().getZ();           
+            tag_pose.position.x = product_at_p1.getOrigin().getX();
+            tag_pose.position.y = product_at_p1.getOrigin().getY();
+            tag_pose.position.z = product_at_p1.getOrigin().getZ();           
             tag_pose.position.y += 0.10;
             tag_pose.position.z += 0.10;
             move_group.setPoseTarget(tag_pose);
@@ -1200,6 +1203,9 @@ void warehouse_action::Position_Manager()
             move_group.move();
 
             ROS_INFO("DONE");
+
+            replacement_finished.data = 1;
+            replace_finish_pub.publish(replacement_finished);
         }
         if(command == 't')
         {
@@ -1238,5 +1244,6 @@ int main(int argc, char **argv)
     signal(SIGINT, sigHandler);
     wa = new warehouse_action(nh);
     ros::spin();
+
     return 0;
 }

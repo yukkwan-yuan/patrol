@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
 
 // ROS
 #include <ros/ros.h>
@@ -105,11 +106,20 @@ void NavigationController::max_vel_callback(const std_msgs::Float64::ConstPtr& m
         max_speed = msg->data;
 }
 
+NavigationController *na;
+
+void sigHandler(int signum) 
+{
+    delete na;
+
+    exit(0);
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "navigation_speed_controller");
     ros::NodeHandle nh;
-    NavigationController node(nh);
+    na = new NavigationController(nh);
     ros::spin();
     return 0;
 }
