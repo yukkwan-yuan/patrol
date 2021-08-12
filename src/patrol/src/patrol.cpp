@@ -24,7 +24,7 @@ class PatrolNode
 {
 private:
     // double cur_roll, cur_pitch, cur_yaw, start_roll, start_pitch, start_yaw, theta;
-    bool reach = false;
+    int reach = 0;
 public:
     // ros::Publisher pub_mb_goal;
     PatrolNode(ros::NodeHandle nh);
@@ -124,10 +124,7 @@ void PatrolNode::odom_callback(const nav_msgs::Odometry::ConstPtr& msg)
 
 void PatrolNode::replace_finish_callback(std_msgs::Int8 msg)
 {
-    if(msg.data == 1)
-        reach = true;
-    else
-        reach = false;
+    reach = msg.data;
 }  
 
 void PatrolNode::Target_one()
@@ -213,7 +210,7 @@ void PatrolNode::Target_two()
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult(ros::Duration(17.0));
+    ac.waitForResult(ros::Duration(25.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
@@ -462,7 +459,7 @@ void PatrolNode::Regulate()
     listener.waitForTransform("/base_link", tf_l_name, ros::Time(0), ros::Duration(2.0));
     listener.lookupTransform("/base_link", tf_l_name, ros::Time(0), tf_l);
 
-    tf_b.setOrigin(tf::Vector3(-0.670, -(tf_l.getOrigin().getZ()), -0.350));
+    tf_b.setOrigin(tf::Vector3(-0.670, -(tf_l.getOrigin().getZ()), -0.320));
     tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
     br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_369", tf_b_name));
 
@@ -610,13 +607,21 @@ void PatrolNode::Setting_patrol_path()
 
         if(c == 's')
         {
-            Target_two();
-            Target_three();
-            Target_four();
-            Regulate();
             while(1)
             {
-                if(reach)
+                if(reach == 1)
+                {
+                    Target_two();
+                    Target_three();
+                    Target_four();
+                    Regulate();
+                    break;
+                }
+            }
+            
+            while(1)
+            {
+                if(reach == 2)
                 {
                     Target_five();
                     Target_six();
@@ -628,17 +633,18 @@ void PatrolNode::Setting_patrol_path()
         
         if(c == 't')
         {
-            // Regulate();
-            while(1)
-            {
-                if(reach)
-                {
-                    Target_five();
-                    Target_six();
-                    Target_one();
-                    break;
-                }
-            }
+            Target_four();
+            Regulate();
+            // while(1)
+            // {
+            //     if(reach)
+            //     {
+            //         Target_five();
+            //         Target_six();
+            //         Target_one();
+            //         break;
+            //     }
+            // }
         }
 
         if(c == 'l')

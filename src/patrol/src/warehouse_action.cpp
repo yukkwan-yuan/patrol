@@ -922,6 +922,17 @@ void warehouse_action::Position_Manager()
             target_number = 0;
 
             prod_pub.publish(prod_list);
+            
+            replacement_finished.data = 1;
+            replace_finish_pub.publish(replacement_finished);
+
+            ROS_INFO("GO SHELF SCAN POINT");
+
+            joint_group_positions = joint_sh_scan;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
+            ROS_INFO("DONE");
         }
         if(command == 's')
         {
@@ -932,30 +943,6 @@ void warehouse_action::Position_Manager()
             move_group.move();
 
             ROS_INFO("DONE");
-        }
-        if(command == '1')
-        {
-            ROS_INFO("GO SCANNING POINT 1");
-        
-            joint_group_positions = joint_wh_scan1;
-            move_group.setJointValueTarget(joint_group_positions);
-            move_group.move();
-        }
-        if(command == '2')
-        {
-            ROS_INFO("GO SCANNING POINT 2");
-        
-            joint_group_positions = joint_wh_scan2;
-            move_group.setJointValueTarget(joint_group_positions);
-            move_group.move();
-        }
-        if(command == '3')
-        {
-            ROS_INFO("GO SCANNING POINT 3");
-        
-            joint_group_positions = joint_wh_scan3;
-            move_group.setJointValueTarget(joint_group_positions);
-            move_group.move();
         }
         if(command == 'r')
         {
@@ -1204,17 +1191,26 @@ void warehouse_action::Position_Manager()
 
             ROS_INFO("DONE");
 
-            replacement_finished.data = 1;
+            replacement_finished.data = 2;
             replace_finish_pub.publish(replacement_finished);
         }
-        if(command == 't')
+        if(command == 'm')
         {
-            current_pose = move_group.getCurrentPose().pose;
+            ROS_INFO("GO JOINT PLACE 1 MID");
+        
+            joint_group_positions = joint_place1_mid;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
 
-            std::cout<< current_pose.orientation.x << std::endl;
-            std::cout<< current_pose.orientation.y << std::endl;
-            std::cout<< current_pose.orientation.z << std::endl;
-            std::cout<< current_pose.orientation.w << std::endl;
+        }
+        if(command == 'p')
+        {
+            ROS_INFO("GO JOINT PLACE 1");
+        
+            joint_group_positions = joint_place1;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+
         }
         if(command == 'q')
         {
