@@ -45,9 +45,12 @@ private:
 
     const vector<double> joint_sh_scan = {-M_PI_2, -M_PI_4, M_PI*2/3, -1.309, 2.800, 0.000};
 
-    const vector<double> joint_wh_scan3 = {-0.305, 0.485, 1.635, -1.953, 0.293, 0.160};
-    const vector<double> joint_wh_scan2 = {-0.772, -0.048, 2.320, -2.200, 0.758, 0.056};
-    const vector<double> joint_wh_scan1 = {-1.564, 0.014, 2.261, -2.227, 1.549, 0.003};
+    // const vector<double> joint_wh_scan3 = {-0.305, 0.485, 1.635, -1.953, 0.293, 0.160};
+    // const vector<double> joint_wh_scan2 = {-0.772, -0.048, 2.320, -2.200, 0.758, 0.056};
+    // const vector<double> joint_wh_scan1 = {-1.564, 0.014, 2.261, -2.227, 1.549, 0.003};
+
+    const vector<double> joint_wh_scan2 = {-0.362, 0.002, 2.369, -2.270, 0.350, 0.133};
+    const vector<double> joint_wh_scan1 = {-1.564, -0.518, 2.621, -2.082, M_PI_2, 0.000};
 
     const vector<double> joint_place1 = {-3.133, 0.180, 2.279, -2.450, 1.545, 0.000};
     const vector<double> joint_place1_mid = {-3.133, -0.282, 2.255, -2.234, 1.547, 0.002};
@@ -256,7 +259,7 @@ void warehouse_action::Position_Manager()
 
                     current_pose.position.x += tf2.getOrigin().getX();
                     current_pose.position.y -= tf2.getOrigin().getZ()-0.095;
-                    current_pose.position.z += tf2.getOrigin().getY()-0.1;
+                    current_pose.position.z += tf2.getOrigin().getY()-0.09;
 
                     move_group.setPoseTarget(current_pose);
                     success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
@@ -684,7 +687,7 @@ void warehouse_action::Position_Manager()
             
             collect = false;
             reach = false;
-            
+            /*
             ROS_INFO("GO SCANNING POINT 3");
 
             joint_group_positions = joint_wh_scan3;
@@ -911,7 +914,7 @@ void warehouse_action::Position_Manager()
 
             collect = false;
             reach = false;
-
+            */
             ROS_INFO("GO HOME");
 
             joint_group_positions = home_p;
@@ -936,13 +939,17 @@ void warehouse_action::Position_Manager()
         }
         if(command == 's')
         {
-            ROS_INFO("GO SHELF SCAN POINT");
-
-            joint_group_positions = joint_sh_scan;
+            ROS_INFO("GO SCANNING POINT 1");
+        
+            joint_group_positions = joint_wh_scan1;
             move_group.setJointValueTarget(joint_group_positions);
             move_group.move();
 
-            ROS_INFO("DONE");
+            ROS_INFO("GO SCANNING POINT 2");
+        
+            joint_group_positions = joint_wh_scan2;
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
         }
         if(command == 'r')
         {
