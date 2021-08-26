@@ -210,7 +210,7 @@ void PatrolNode::Target_two()
     ROS_INFO("Sending Goal");
     ac.sendGoal(goal);
 
-    ac.waitForResult(ros::Duration(25.0));
+    ac.waitForResult(ros::Duration(23.0));
 
     if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
         ROS_INFO("Hooray, the base moved to the goal");
@@ -459,7 +459,7 @@ void PatrolNode::Regulate()
     listener.waitForTransform("/base_link", tf_l_name, ros::Time(0), ros::Duration(2.0));
     listener.lookupTransform("/base_link", tf_l_name, ros::Time(0), tf_l);
 
-    tf_b.setOrigin(tf::Vector3(-0.670, -(tf_l.getOrigin().getZ()), -0.320));
+    tf_b.setOrigin(tf::Vector3(-0.630, -(tf_l.getOrigin().getZ()), -0.320));
     tf_b.setRotation(tf::Quaternion(-0.500, 0.500, 0.500, 0.500));
     br.sendTransform(tf::StampedTransform(tf_b, ros::Time::now(), "/tag_369", tf_b_name));
 

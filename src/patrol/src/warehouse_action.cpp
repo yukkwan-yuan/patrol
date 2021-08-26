@@ -104,9 +104,9 @@ warehouse_action::warehouse_action(ros::NodeHandle nh)
     mis_sub = nh.subscribe("/missing_bottle", 1, &warehouse_action::mis_callback, this);
     mis_pub = nh.advertise<detection_msgs::StringArray>("/missing_bottle", 1);
     string s;
-    s = "Coke";
+    s = "Soda";
     sa.strings.push_back(s);
-    s = "Lemonade";
+    s = "MineralWater";
     sa.strings.push_back(s);
     s = "PinkSoda";
     sa.strings.push_back(s);
@@ -1005,9 +1005,9 @@ void warehouse_action::Position_Manager()
             listener.waitForTransform("/base_link", tf_soda_name, ros::Time(0), ros::Duration(3.0));
             listener.lookupTransform("/base_link", tf_soda_name, ros::Time(0), tf_bl2soda);
 
-            tf::StampedTransform product_at_p1 = tf_bl2soda;
-            tf::StampedTransform product_at_p2 = tf_bl2pinksoda;
-            tf::StampedTransform product_at_p3 = tf_bl2coke;
+            tf::StampedTransform product_at_p1 = tf_bl2pinksoda;
+            tf::StampedTransform product_at_p2 = tf_bl2mineralwater;
+            tf::StampedTransform product_at_p3 = tf_bl2soda;
 
             //START REPLACEMENT
             ROS_INFO("GO JOINT PLACE 3");

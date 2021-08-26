@@ -100,7 +100,7 @@ void NavigationController::det_callback(const std_msgs::Int8::ConstPtr& msg)
 
 void NavigationController::max_vel_callback(const std_msgs::Float64::ConstPtr& msg)
 {
-    ROS_INFO("Setting Max Speed to %lf\n", msg->data);
+    // ROS_INFO("Setting Max Speed to %lf\n", msg->data);
     if(msg->data > 0.3)
         max_speed = 0.4;
     else
