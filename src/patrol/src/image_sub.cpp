@@ -62,7 +62,11 @@ void foo()
       pub_depth.publish(depth_img);
       AUSCULTATION = true;
     }
-      
+    if(c == 'q')
+    {
+      ROS_INFO("QUIT");
+      break;
+    }  
   }
 }
 
