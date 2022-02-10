@@ -21,6 +21,12 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 
+#include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_state/robot_state.h>
+
 #include <moveit_msgs/CollisionObject.h>
 #include <moveit_msgs/AttachedCollisionObject.h>
 // Custom msg & srv
@@ -41,9 +47,9 @@ private:
     const string PLANNING_GROUP = "tm_arm";
     const vector<double> wait_for_swab = {-0.01820257492363453, 0.1478414684534073, 2.1385350227355957, -2.4705910682678223, 1.6482404470443726, 0.013351768255233765};
     const vector<double> home_test = {-0.018215017393231392, 0.011714097112417221, 2.5290753841400146, -2.8384482860565186, 1.6483471393585205, 0.013409946113824844};
+    const vector<double> home_gs = {-1.6396251916885376, -0.5873907208442688, 1.671115756034851, 0.522377073764801, 1.6284018754959106, -0.15363746881484985};
     const vector<double> home_p = {-0.017194775864481926, 0.23691341280937195, 2.100027084350586, -2.472792148590088, 1.6404544115066528, 0.012149429880082607};
-    
-    const vector<double> new_home_point = {0, -1.0395996570587158, 2.6233043670654297, -1.666411280632019, 1.6540776491165161, 0};
+    const vector<double> new_home_point = {-0.04551265761256218, -0.4030570089817047, 1.826123833656311, -1.283854603767395, 1.6480659246444702, 0.0};
     float *x_tmp, *y_tmp, *z_tmp;
     int count = 0, target_amount = 0, target_number = 0;
     std_msgs::Int8 replacement_finished;
@@ -265,25 +271,18 @@ void nasal_swab::Position_Manager()
     vector<double> joint_group_positions;
     current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
     move_group.setStartState(*move_group.getCurrentState());
-    move_group.setMaxVelocityScalingFactor(0.1);
+    //move_group.setMaxVelocityScalingFactor(0.05);
 
     moveit_msgs::Constraints endEffector_constraints;
     moveit_msgs::OrientationConstraint ocm;
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool success;
-
-    //joint_group_positions = home_p2;
-    //move_group.setJointValueTarget(joint_group_positions);
-    //move_group.move();
-    //grip.data = true;
-    //gripper_pub.publish(grip);
-    ROS_INFO("DONE");
     
     while(1)
     {
         command = getchar();
 
-        if(command == 'h')
+        if(command == 'l')
         {
             ROS_INFO("GO HOME");
             joint_group_positions = wait_for_swab;
@@ -295,12 +294,65 @@ void nasal_swab::Position_Manager()
             ROS_INFO("DONE");
         }
         
+        if(command == 'p')//0109測試home
+        {
+            ROS_INFO("REACH HOME");
+            joint_group_positions = new_home_point;
+            move_group.setMaxVelocityScalingFactor(0.1);
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            grip.data = true;
+            gripper_pub.publish(grip);
+            current_pose = move_group.getCurrentPose().pose;
+            //sleep(1);
+            //reach = true;
+            ROS_INFO("DONE");
+        }
+
+        if(command == 'h')
+        {
+            ROS_INFO("REACH HOME");
+            joint_group_positions = home_p;
+            move_group.setMaxVelocityScalingFactor(0.1);
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            grip.data = true;
+            gripper_pub.publish(grip);
+            current_pose = move_group.getCurrentPose().pose;
+            //sleep(1);
+            //reach = true;
+            ROS_INFO("DONE");
+        }
+
+        if(command == 'g')
+        {
+            ROS_INFO("REACH HOME");
+            joint_group_positions = home_gs;
+            move_group.setMaxVelocityScalingFactor(0.3);
+            move_group.setJointValueTarget(joint_group_positions);
+            move_group.move();
+            grip.data = true;
+            gripper_pub.publish(grip);
+            current_pose = move_group.getCurrentPose().pose;
+            //sleep(1);
+            //reach = true;
+            ROS_INFO("DONE");
+        }
+
+
+
         if(command == 'w')
         {
             ROS_INFO("WAIT FOR SWAB");
-            joint_group_positions = home_test;
-            //move_group.setMaxVelocityScalingFactor(0.1);
-            move_group.setJointValueTarget(joint_group_positions);
+            // // joint_group_positions = home_test;
+            // // //move_group.setMaxVelocityScalingFactor(0.1);
+            // // move_group.setJointValueTarget(joint_group_positions);
+            // current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
+            // joint_group_positions=move_group.getCurrentJointValues();
+            // joint_group_positions[3] -= 0.1792452335357666;
+            // move_group.setJointValueTarget(joint_group_positions);
+            //move_group.move();
+            // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
             move_group.move();
             grip.data = true;
             gripper_pub.publish(grip);
@@ -314,7 +366,9 @@ void nasal_swab::Position_Manager()
         if(command == 'n')
         {
             ROS_INFO("READY TO ENTER THE NOSTRILS");
+            joint_group_positions=move_group.getCurrentJointValues();
             
+
             //group.setStartState(*group.getCurrentState());
             moveit_msgs::Constraints endEffector_constraints;
             moveit_msgs::OrientationConstraint ocm;
@@ -356,9 +410,20 @@ void nasal_swab::Position_Manager()
 
             
             current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
-    
-            joint_group_positions[1] -= 0.161913;
-            joint_group_positions[3] += 0.315526;
+            joint_group_positions=move_group.getCurrentJointValues();
+            joint_group_positions[0] -= (0.14005903899669647-0.1224910095334053);
+            joint_group_positions[1] += (0.22351965308189392-0.055379122495651245);
+            joint_group_positions[2] -= (1.4275147914886475-1.2309569120407104);
+            joint_group_positions[3] += (1.3428757190704346-1.3174326419830322);
+            joint_group_positions[4] += (1.4828609228134155-1.463274359703064);
+            joint_group_positions[5] -= (0.026606574654579163-0.023920705541968346);
+            sleep(1);
+
+//0.14005903899669647, 0.055379122495651245, 1.4275147914886475, -1.3428757190704346, 1.463274359703064, 0.026606574654579163
+//0.1224910095334053, 0.22351965308189392, 1.2309569120407104, -1.3174326419830322, 1.4828609228134155, 0.023920705541968346
+
+            //joint_group_positions[3] += 0.161913;//0.315526;
+            move_group.setMaxVelocityScalingFactor(0.01);
             move_group.setJointValueTarget(joint_group_positions);
             //move_group.move();
             success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
@@ -367,9 +432,77 @@ void nasal_swab::Position_Manager()
             gripper_pub.publish(grip);
             //current_pose = move_group.getCurrentPose().pose;
             sleep(1);
-
             ROS_INFO("DONE");
         }
+
+
+        if(command == 'v')
+        {
+            ROS_INFO("READY TO ENTER THE NOSTRILS");
+            
+            //group.setStartState(*group.getCurrentState());
+
+            
+            current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
+            joint_group_positions=move_group.getCurrentJointValues();
+            // joint_group_positions[0] -= (0.14005903899669647-0.1224910095334053);
+            // joint_group_positions[1] += (0.22351965308189392-0.055379122495651245);
+            // joint_group_positions[2] -= (1.4275147914886475-1.2309569120407104);
+            // joint_group_positions[3] += (1.3428757190704346-1.3174326419830322);
+            // joint_group_positions[4] += (1.4828609228134155-1.463274359703064);
+            // joint_group_positions[5] -= (0.026606574654579163-0.023920705541968346);
+            joint_group_positions[5] = -2.678682804107666;
+          
+
+//0.14005903899669647, 0.055379122495651245, 1.4275147914886475, -1.3428757190704346, 1.463274359703064, 0.026606574654579163
+//0.1224910095334053, 0.22351965308189392, 1.2309569120407104, -1.3174326419830322, 1.4828609228134155, 0.023920705541968346
+
+            //joint_group_positions[3] += 0.161913;//0.315526;
+            move_group.setMaxVelocityScalingFactor(0.05);
+            move_group.setJointValueTarget(joint_group_positions);
+            //move_group.move();
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            grip.data = true;
+            gripper_pub.publish(grip);
+            //current_pose = move_group.getCurrentPose().pose;
+            ROS_INFO("DONE");
+        }
+
+        if(command == 'b')
+        {
+            ROS_INFO("READY TO ENTER THE NOSTRILS");
+            
+            //group.setStartState(*group.getCurrentState());
+
+            
+            current_state->copyJointGroupPositions(joint_model_group, joint_group_positions);
+            joint_group_positions=move_group.getCurrentJointValues();
+            // joint_group_positions[0] -= (0.14005903899669647-0.1224910095334053);
+            // joint_group_positions[1] += (0.22351965308189392-0.055379122495651245);
+            // joint_group_positions[2] -= (1.4275147914886475-1.2309569120407104);
+            // joint_group_positions[3] += (1.3428757190704346-1.3174326419830322);
+            // joint_group_positions[4] += (1.4828609228134155-1.463274359703064);
+            // joint_group_positions[5] -= (0.026606574654579163-0.023920705541968346);
+            joint_group_positions[5] = (4.848136813961901e-05);
+          
+
+//0.14005903899669647, 0.055379122495651245, 1.4275147914886475, -1.3428757190704346, 1.463274359703064, 0.026606574654579163
+//0.1224910095334053, 0.22351965308189392, 1.2309569120407104, -1.3174326419830322, 1.4828609228134155, 0.023920705541968346
+
+            //joint_group_positions[3] += 0.161913;//0.315526;
+            move_group.setMaxVelocityScalingFactor(0.05);
+            move_group.setJointValueTarget(joint_group_positions);
+            //move_group.move();
+            success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+            move_group.move();
+            grip.data = true;
+            gripper_pub.publish(grip);
+            //current_pose = move_group.getCurrentPose().pose;
+            ROS_INFO("DONE");
+        }
+
+
 
 
         if(command == 'k')
@@ -381,13 +514,25 @@ void nasal_swab::Position_Manager()
             cout << "-----------------------"<< endl;
             target_pose = current_pose;
             target_pose.position.x += (item_position.position.x-0.285);
-            target_pose.position.y += (item_position.position.y + 0.05);
-            target_pose.position.z += (item_position.position.z+0.18);
+            target_pose.position.y += (item_position.position.y + 0.04);
+            target_pose.position.z += (item_position.position.z+0.1);
+            //target_pose.position.w=0.586061478456;
+            move_group.setMaxVelocityScalingFactor(0.02);
             move_group.setPoseTarget(target_pose);
             move_group.move();
     
             ROS_INFO("DONE");
         }
+
+       if(command == 'x')
+        {
+            cout << "x: "<< item_position.position.x<<endl;
+            cout << "y: "<< item_position.position.y<<endl;
+            cout << "z: "<< item_position.position.z<<endl;
+            cout << "-----------------------"<< endl;
+
+        }
+        
 
         
 
@@ -468,15 +613,6 @@ int main(int argc, char **argv)
 
 
 
-// 0.08656487613916397, 0.2898663282394409, 1.8076848983764648, -2.395212173461914, 1.5475736856460571, -0.017938105389475822
-// 0.08479811996221542, 0.2868678569793701, 1.1110849380493164, -1.993922233581543, 1.5490281581878662, -0.016987871378660202
-
-//0.08477944880723953, 0.28705447912216187, 1.8106335401535034, -2.393806219100952, 1.5506086349487305, -0.016027940437197685
-//0.08469235897064209, 0.28685539960861206, 0.7111757397651672, -1.9940096139907837, 1.5491057634353638, -0.01693939045071602
-
-
-//0.08474212884902954, 0.28701093792915344, 1.8107454776763916, -2.3945627212524414, 1.5497747659683228, -0.015853406861424446
-//0.08473590761423111, 0.04312380030751228, 1.8028947114944458, -1.9318565130233765, 1.5497747659683228, 0.010510760359466076
-
-//0.08495986461639404, 0.2880125045776367, 1.8120582103729248, -2.3959298133850098, 1.5495517253875732, -0.016658198088407516
-//0.08458038419485092, 0.12609916925430298, 1.8111997842788696, -2.0804033279418945, 1.550017237663269, -0.016493361443281174
+//0.14005903899669647, 0.055379122495651245, 1.4275147914886475, -1.3428757190704346, 1.463274359703064, 0.026606574654579163
+//0.1224910095334053, 0.22351965308189392, 1.2309569120407104, -1.3174326419830322, 1.4828609228134155, 0.023920705541968346
+//4.848136813961901e-05      -2.678682804107666
